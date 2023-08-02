@@ -52,8 +52,20 @@ int Interpreter::term() {
 
 int Interpreter::factor() {
   auto token = current_token_;
-  eat(Token::Type::INTEGER);
-  return std::get<int>(token.value());
+
+  if (token.type() == Token::Type::INTEGER) {
+    eat(Token::Type::INTEGER);
+    return std::get<int>(token.value());
+  } else if (token.type() == Token::Type::LEFT_PAREN) {
+    eat(Token::Type::LEFT_PAREN);
+    auto result = expr();
+    eat(Token::Type::RIGHT_PAREN);
+    return result;
+  } else {
+    error();
+  }
+
+  return -1;
 }
 
 }  // namespace Pascal
