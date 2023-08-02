@@ -6,6 +6,7 @@ env.Object('main.o', 'main.cc')
 # compile interpreter.cc to interpreter.o
 env.Object('interpreter.o', 'interpreter.cc')
 env.Object('lexer.o', 'lexer.cc')
+env.Object('parser.o', 'parser.cc')
 
 # link main.o and interpreter.o to executable as interpreter
-env.Program('interpreter', ['main.o', 'interpreter.o', 'lexer.o'])
+env.Program('interpreter', ['main.o', 'interpreter.o', 'lexer.o', 'parser.o'])

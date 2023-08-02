@@ -5,32 +5,35 @@
 #include <concepts>
 #include <optional>
 #include <string>
-#include "lexer.h"
+#include <utility>
+#include "parser.h"
 
 namespace Pascal {
 
 class Interpreter {
-
  private:
-  Lexer lexer_;
-  Token current_token_;
+  Parser parser_;
 
  public:
   // convertable to string
   template <typename T>
   requires std::convertible_to<T, std::string> explicit Interpreter(T&& text)
-      : lexer_(std::forward<T>(text)),
-        current_token_(lexer_.get_next_token()) {}
+      : parser_(std::forward<T>(text)) {}
 
-  int expr();
+  int interpret();
 
  private:
-  void error();
-
-  void eat(Token::Type type);
-
-  int factor();
-
-  int term();
+  template <typename Tree>
+  requires std::derived_from<Tree, AST> int visit(Tree* node) {
+    // try Tree can be converted to Number, using dynamic_cast
+    if (auto* number = dynamic_cast<Number*>(node); number != nullptr) {
+      return this->visit(number);
+    }
+    // try Tree can be converted to BinaryOp, using dynamic_cast
+    if (auto* binary_op = dynamic_cast<BinaryOp*>(node); binary_op != nullptr) {
+      return this->visit(binary_op);
+    }
+    throw std::runtime_error("Invalid AST");
+  }
 };
 }  // namespace Pascal

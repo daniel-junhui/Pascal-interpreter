@@ -13,7 +13,7 @@ int main() {
         continue;
       }
       Pascal::Interpreter interpreter(text);
-      std::cout << interpreter.expr() << '\n';
+      std::cout << interpreter.interpret() << '\n';
     } catch (const std::exception& e) {
       std::cerr << e.what() << '\n';
     }

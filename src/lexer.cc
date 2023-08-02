@@ -64,7 +64,7 @@ Token Lexer::get_next_token() {
       this->advance();
       return Token(Token::Type::DIVIDE);
     }
-    
+
     if (*this->current_char_ == '(') {
       this->advance();
       return Token(Token::Type::LEFT_PAREN);
