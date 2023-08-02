@@ -16,20 +16,29 @@ void Interpreter::eat(Token::Type type) {
 }
 
 int Interpreter::expr() {
-  auto result = factor();
+  auto result = term();
 
   while (current_token_.type() == Token::Type::PLUS ||
-         current_token_.type() == Token::Type::MINUS ||
-         current_token_.type() == Token::Type::MULTIPLY ||
-         current_token_.type() == Token::Type::DIVIDE) {
+         current_token_.type() == Token::Type::MINUS) {
     auto token = current_token_;
     if (token.type() == Token::Type::PLUS) {
       eat(Token::Type::PLUS);
-      result += factor();
+      result += term();
     } else if (token.type() == Token::Type::MINUS) {
       eat(Token::Type::MINUS);
-      result -= factor();
-    } else if (token.type() == Token::Type::MULTIPLY) {
+      result -= term();
+    }
+  }
+  return result;
+}
+
+int Interpreter::term() {
+  auto result = factor();
+
+  while (current_token_.type() == Token::Type::MULTIPLY ||
+         current_token_.type() == Token::Type::DIVIDE) {
+    auto token = current_token_;
+    if (token.type() == Token::Type::MULTIPLY) {
       eat(Token::Type::MULTIPLY);
       result *= factor();
     } else if (token.type() == Token::Type::DIVIDE) {

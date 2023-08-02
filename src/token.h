@@ -17,6 +17,8 @@ class Token {
     MULTIPLY,
     DIVIDE,
     END_OF_FILE,
+    LEFT_PAREN,
+    RIGHT_PAREN,
   };
 
   // Value type is a variant of int, char
@@ -48,6 +50,18 @@ class Token {
         break;
       case Type::END_OF_FILE:
         type_str = "EOF";
+        break;
+      case Type::MULTIPLY:
+        type_str = "MULTIPLY";
+        break;
+      case Type::DIVIDE:
+        type_str = "DIVIDE";
+        break;
+      case Type::LEFT_PAREN:
+        type_str = "LEFT_PAREN";
+        break;
+      case Type::RIGHT_PAREN:
+        type_str = "RIGHT_PAREN";
         break;
       default:
         break;

@@ -30,5 +30,7 @@ class Interpreter {
   void eat(Token::Type type);
 
   int factor();
+
+  int term();
 };
 }  // namespace Pascal
