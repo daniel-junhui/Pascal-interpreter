@@ -7,7 +7,7 @@
 #include <string>
 #include <variant>
 
-namespace Pascal {
+namespace Calculator {
 class Token {
  public:
   enum class Type {
@@ -81,4 +81,4 @@ class Token {
 
   ValueType value() { return *value_; }
 };
-}  // namespace Pascal
+}  // namespace Calculator

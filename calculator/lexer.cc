@@ -2,7 +2,7 @@
 
 #include "lexer.h"
 
-namespace Pascal {
+namespace Calculator {
 void Lexer::error() {
   throw std::runtime_error("Error parsing input");
 }
@@ -81,4 +81,4 @@ Token Lexer::get_next_token() {
   return Token(Token::Type::END_OF_FILE);
 }
 
-}  // namespace Pascal
+}  // namespace Calculator

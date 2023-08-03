@@ -3,7 +3,7 @@
 #include "parser.h"
 #include <utility>
 
-namespace Pascal {
+namespace Calculator {
 
 void Parser::error() {
   throw std::runtime_error("Invalid syntax");
@@ -91,4 +91,4 @@ std::unique_ptr<AST> Parser::term() {
   return node;
 }
 
-}  // namespace Pascal
+}  // namespace Calculator

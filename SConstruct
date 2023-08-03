@@ -1,1 +1,1 @@
-SConscript('src/SConscript', variant_dir='build')
+SConscript('calculator/SConscript', variant_dir='build')

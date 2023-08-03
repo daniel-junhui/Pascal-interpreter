@@ -12,7 +12,7 @@ int main() {
       if (text.empty()) {
         continue;
       }
-      Pascal::Interpreter interpreter(text);
+      Calculator::Interpreter interpreter(text);
       std::cout << interpreter.interpret() << '\n';
     } catch (const std::exception& e) {
       std::cerr << e.what() << '\n';

@@ -8,7 +8,7 @@
 #include "AST.h"
 #include "lexer.h"
 
-namespace Pascal {
+namespace Calculator {
 
 class Parser {
  private:
@@ -34,4 +34,4 @@ class Parser {
 
   std::unique_ptr<AST> expr();
 };
-}  // namespace Pascal
+}  // namespace Calculator

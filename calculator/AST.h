@@ -6,7 +6,7 @@
 #include <utility>
 #include "token.h"
 
-namespace Pascal {
+namespace Calculator {
 
 class Visitor;
 
@@ -121,4 +121,4 @@ class UnaryOp : public AST {
   int accept(Visitor* visitor) override { return visitor->visit(this); }
 };
 
-}  // namespace Pascal
+}  // namespace Calculator

@@ -8,7 +8,7 @@
 #include <utility>
 #include "parser.h"
 
-namespace Pascal {
+namespace Calculator {
 
 class Interpreter : public Visitor {
  private:
@@ -29,4 +29,4 @@ class Interpreter : public Visitor {
 
   int visit(const UnaryOp* unary_op) override;
 };
-}  // namespace Pascal
+}  // namespace Calculator

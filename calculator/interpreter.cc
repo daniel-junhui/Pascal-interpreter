@@ -2,7 +2,7 @@
 
 #include "interpreter.h"
 
-namespace Pascal {
+namespace Calculator {
 
 int Interpreter::interpret() {
   auto tree = this->parser_.parse();
@@ -39,4 +39,4 @@ int Interpreter::visit(const UnaryOp* node) {
   }
 }
 
-}  // namespace Pascal
+}  // namespace Calculator

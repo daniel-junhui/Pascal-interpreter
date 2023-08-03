@@ -6,7 +6,7 @@
 #include <utility>
 #include "token.h"
 
-namespace Pascal {
+namespace Calculator {
 class Lexer {
  private:
   const std::string text_;
@@ -36,4 +36,4 @@ class Lexer {
  public:
   Token get_next_token();
 };
-}  // namespace Pascal
+}  // namespace Calculator

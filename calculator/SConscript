@@ -9,4 +9,4 @@ env.Object('lexer.o', 'lexer.cc')
 env.Object('parser.o', 'parser.cc')
 
 # link main.o and interpreter.o to executable as interpreter
-env.Program('interpreter', ['main.o', 'interpreter.o', 'lexer.o', 'parser.o'])
+env.Program('single_line_calculator', ['main.o', 'interpreter.o', 'lexer.o', 'parser.o'])
