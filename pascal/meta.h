@@ -5,15 +5,6 @@
 
 namespace Pascal {
 
-class Visitor;
-
-class AST {
- public:
-  virtual ~AST() = default;
-
-  virtual int accept(Visitor* visitor) = 0;
-};
-
 class Token {
  public:
   enum class Type {

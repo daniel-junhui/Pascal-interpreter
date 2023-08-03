@@ -2,11 +2,13 @@ env = Environment(CXXFLAGS = '-std=c++20')
 
 # compile main.cc to main.o
 env.Object('lexer_test.o', 'lexer_test.cc')
+env.Object('parser_test.o', 'parser_test.cc')
 
 # compile interpreter.cc to interpreter.o
 # env.Object('interpreter.o', 'interpreter.cc')
 env.Object('lexer.o', 'lexer.cc')
-# env.Object('parser.o', 'parser.cc')
+env.Object('parser.o', 'parser.cc')
 
 # link main.o and interpreter.o to executable as interpreter
 env.Program('lexer_test', ['lexer_test.o', 'lexer.o'])
+env.Program('parser_test', ['parser_test.o', 'lexer.o', 'parser.o'])
