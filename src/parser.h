@@ -3,6 +3,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <utility>
 #include "AST.h"
 #include "lexer.h"
 

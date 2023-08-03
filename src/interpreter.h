@@ -7,10 +7,11 @@
 #include <string>
 #include <utility>
 #include "parser.h"
+#include "visitor_pattern.h"
 
 namespace Pascal {
 
-class Interpreter {
+class Interpreter : public Visitor {
  private:
   Parser parser_;
 
@@ -23,17 +24,8 @@ class Interpreter {
   int interpret();
 
  private:
-  template <typename Tree>
-  requires std::derived_from<Tree, AST> int visit(Tree* node) {
-    // try Tree can be converted to Number, using dynamic_cast
-    if (auto* number = dynamic_cast<Number*>(node); number != nullptr) {
-      return this->visit(number);
-    }
-    // try Tree can be converted to BinaryOp, using dynamic_cast
-    if (auto* binary_op = dynamic_cast<BinaryOp*>(node); binary_op != nullptr) {
-      return this->visit(binary_op);
-    }
-    throw std::runtime_error("Invalid AST");
-  }
+  int visit(const BinaryOp* binary_op) override;
+
+  int visit(const Number* number) override;
 };
 }  // namespace Pascal

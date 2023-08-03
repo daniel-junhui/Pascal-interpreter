@@ -1,15 +1,30 @@
 // Copyright 2023 Zhu Junhui
 
 #pragma once
-
+#include <functional>
 #include <memory>
+#include <utility>
 #include "token.h"
+#include "visitor_pattern.h"
 
 namespace Pascal {
+
+class Visitor;
 
 class AST {
  public:
   virtual ~AST() = default;
+
+  virtual int accept(Visitor* visitor) = 0;
+};
+
+class BinaryOp;
+class Number;
+
+class Visitor {
+ public:
+  virtual int visit(const BinaryOp* binary_op) = 0;
+  virtual int visit(const Number* number) = 0;
 };
 
 enum class Operator {
@@ -52,6 +67,10 @@ class BinaryOp : public AST {
   AST* right() const { return right_.get(); }
 
   Operator op() const { return op_; }
+
+  int accept(Visitor* visitor) override {
+    visitor->visit(this);
+  }
 };
 
 class Number : public AST {
@@ -67,6 +86,10 @@ class Number : public AST {
   }
 
   int value() const { return value_; }
+
+  int accept(Visitor* visitor) override {
+    visitor->visit(this);
+  }
 };
 
 }  // namespace Pascal

@@ -6,25 +6,23 @@ namespace Pascal {
 
 int Interpreter::interpret() {
   auto tree = this->parser_.parse();
-  return this->visit(tree.get());
+  return tree->accept(this);
 }
 
-template <>
-int Interpreter::visit<Number>(Number* node) {
+int Interpreter::visit(const Number* node) {
   return node->value();
 }
 
-template <>
-int Interpreter::visit<BinaryOp>(BinaryOp* node) {
+int Interpreter::visit(const BinaryOp* node) {
   switch (node->op()) {
     case Operator::PLUS:
-      return this->visit(node->left()) + this->visit(node->right());
+      return node->left()->accept(this) + node->right()->accept(this);
     case Operator::MINUS:
-      return this->visit(node->left()) - this->visit(node->right());
+      return node->left()->accept(this) - node->right()->accept(this);
     case Operator::MULTIPLY:
-      return this->visit(node->left()) * this->visit(node->right());
+      return node->left()->accept(this) * node->right()->accept(this);
     case Operator::DIVIDE:
-      return this->visit(node->left()) / this->visit(node->right());
+      return node->left()->accept(this) / node->right()->accept(this);
     default:
       throw std::runtime_error("Invalid operator");
   }
