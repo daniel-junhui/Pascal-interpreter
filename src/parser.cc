@@ -1,7 +1,7 @@
 // Copyright 2023 Zhu Junhui
 
-#include <utility>
 #include "parser.h"
+#include <utility>
 
 namespace Pascal {
 
@@ -27,18 +27,33 @@ void Parser::eat(Token::Type type) {
 
 std::unique_ptr<AST> Parser::factor() {
   auto token = current_token_;
-  if (token.type() == Token::Type::INTEGER) {
-    eat(Token::Type::INTEGER);
-    return std::make_unique<Number>(token);
-  } else if (token.type() == Token::Type::LEFT_PAREN) {
-    eat(Token::Type::LEFT_PAREN);
-    auto result = expr();
-    eat(Token::Type::RIGHT_PAREN);
-    return result;
-  } else {
-    error();
-  }
+  auto type = token.type();
 
+  using Token = Token::Type;
+
+  switch (type) {
+    case Token::INTEGER:
+      eat(Token::INTEGER);
+      return std::make_unique<Number>(token);
+      break;
+
+    case Token::PLUS:
+    case Token::MINUS:
+      eat(type);
+      return std::make_unique<UnaryOp>(factor(), token);
+      break;
+
+    case Token::LEFT_PAREN: {
+      eat(Token::LEFT_PAREN);
+      auto result = expr();
+      eat(Token::RIGHT_PAREN);
+      return result;
+    } break;
+
+    default:
+      error();
+      break;
+  }
   return nullptr;
 }
 

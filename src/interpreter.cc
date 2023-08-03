@@ -15,16 +15,27 @@ int Interpreter::visit(const Number* node) {
 
 int Interpreter::visit(const BinaryOp* node) {
   switch (node->op()) {
-    case Operator::PLUS:
+    case BinaryOperator::PLUS:
       return node->left()->accept(this) + node->right()->accept(this);
-    case Operator::MINUS:
+    case BinaryOperator::MINUS:
       return node->left()->accept(this) - node->right()->accept(this);
-    case Operator::MULTIPLY:
+    case BinaryOperator::MULTIPLY:
       return node->left()->accept(this) * node->right()->accept(this);
-    case Operator::DIVIDE:
+    case BinaryOperator::DIVIDE:
       return node->left()->accept(this) / node->right()->accept(this);
     default:
-      throw std::runtime_error("Invalid operator");
+      throw std::runtime_error("Invalid BinaryOperator");
+  }
+}
+
+int Interpreter::visit(const UnaryOp* node) {
+  switch (node->op()) {
+    case UnaryOperator::PLUS:
+      return node->expr()->accept(this);
+    case UnaryOperator::MINUS:
+      return -node->expr()->accept(this);
+    default:
+      throw std::runtime_error("Invalid UnaryOperator");
   }
 }
 

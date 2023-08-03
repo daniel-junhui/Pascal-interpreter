@@ -7,7 +7,6 @@
 #include <string>
 #include <utility>
 #include "parser.h"
-#include "visitor_pattern.h"
 
 namespace Pascal {
 
@@ -27,5 +26,7 @@ class Interpreter : public Visitor {
   int visit(const BinaryOp* binary_op) override;
 
   int visit(const Number* number) override;
+
+  int visit(const UnaryOp* unary_op) override;
 };
 }  // namespace Pascal
