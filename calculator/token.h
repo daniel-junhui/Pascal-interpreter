@@ -8,6 +8,7 @@
 #include <variant>
 
 namespace Calculator {
+  
 class Token {
  public:
   enum class Type {
