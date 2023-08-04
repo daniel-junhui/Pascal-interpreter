@@ -1,4 +1,6 @@
 #include "interpreter.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
 namespace Pascal {
 void Interpreter::error(const std::string& msg) {
@@ -59,6 +61,15 @@ int Interpreter::visit(const Compound* node) {
     child->accept(this);
   }
   return 0;
+}
+
+void Interpreter::print_global_scope() const {
+  // use spdlog to print global scope
+  auto logger = spdlog::stdout_color_mt("Interpreter");
+  logger->info("Global scope:");
+  for (const auto& [key, value] : global_scope_) {
+    logger->info("{}: {}", key, value);
+  }
 }
 
 }  // namespace Pascal

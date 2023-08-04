@@ -30,5 +30,7 @@ int main(int argc, char* argv[]) {
   Pascal::Interpreter interpreter;
   tree->accept(&interpreter);
 
+  interpreter.print_global_scope();
+
   return 0;
 }

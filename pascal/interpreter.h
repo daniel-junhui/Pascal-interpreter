@@ -18,5 +18,7 @@ class Interpreter : public Visitor {
   int visit(const Compound* compound) override;
   int visit(const Assign* assign) override;
   int visit(const Variable* variable) override;
+
+  void print_global_scope() const;
 };
 }  // namespace Pascal
