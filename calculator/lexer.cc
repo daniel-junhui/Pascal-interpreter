@@ -1,10 +1,11 @@
 // Copyright 2023 Zhu Junhui
 
 #include "lexer.h"
+#include <stdexcept>
 
 namespace Calculator {
 void Lexer::error() {
-  throw std::runtime_error("Error parsing input");
+  throw std::runtime_error("Invalid character");
 }
 
 void Lexer::advance() {

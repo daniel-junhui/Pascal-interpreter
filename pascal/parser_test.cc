@@ -13,15 +13,21 @@ class ReadVisitor : public Pascal::Visitor {
     }
   }
 
+  std::ostream& pre_print_depth() {
+    for (int i = 0; i < depth_; ++i) {
+      std::cout << '\t';
+    }
+    return std::cout;
+  }
+
  public:
   int visit(const Pascal::BinaryOperation* binary_op) override {
-    print_depth();
-    std::cout << "BinaryOperation\n";
-    std::cout << "left: \n";
+    pre_print_depth() << "BinaryOperation\n";
+    pre_print_depth() << "left: \n";
     ++depth_;
     binary_op->left()->accept(this);
     --depth_;
-    std::cout << "right: \n";
+    pre_print_depth() << "right: \n";
     ++depth_;
     binary_op->right()->accept(this);
     --depth_;
@@ -30,9 +36,8 @@ class ReadVisitor : public Pascal::Visitor {
   }
 
   int visit(const Pascal::UnaryOperation* unary_op) override {
-    print_depth();
-    std::cout << "UnaryOperation\n";
-    std::cout << "expr: \n";
+    pre_print_depth() << "UnaryOperation\n";
+    pre_print_depth() << "expr: \n";
     ++depth_;
     unary_op->expr()->accept(this);
     --depth_;
@@ -41,16 +46,14 @@ class ReadVisitor : public Pascal::Visitor {
   }
 
   int visit(const Pascal::Number* number) override {
-    print_depth();
-    std::cout << "Number\n";
-    std::cout << "value: " << number->value() << '\n';
+    pre_print_depth() << "Number\n";
+    pre_print_depth() << "value: " << number->value() << '\n';
     return 0;
   }
 
   int visit(const Pascal::Compound* compound) override {
-    print_depth();
-    std::cout << "Compound\n";
-    std::cout << "children: \n";
+    pre_print_depth() << "Compound\n";
+    pre_print_depth() << "children: \n";
     ++depth_;
     for (const auto& child : compound->children()) {
       child->accept(this);
@@ -61,15 +64,13 @@ class ReadVisitor : public Pascal::Visitor {
   }
 
   int visit(const Pascal::Assign* assign) override {
-    print_depth();
-
-    std::cout << "Assign\n";
-    std::cout << "left: \n";
+    pre_print_depth() << "Assign\n";
+    pre_print_depth() << "left: \n";
     ++depth_;
     assign->left()->accept(this);
     --depth_;
 
-    std::cout << "right: \n";
+    pre_print_depth() << "right: \n";
     ++depth_;
     assign->right()->accept(this);
     --depth_;
@@ -78,10 +79,8 @@ class ReadVisitor : public Pascal::Visitor {
   }
 
   int visit(const Pascal::Variable* variable) override {
-    print_depth();
-
-    std::cout << "Variable\n";
-    std::cout << "value: " << variable->value() << '\n';
+    pre_print_depth() << "Variable\n";
+    pre_print_depth() << "value: " << variable->value() << '\n';
     return 0;
   }
 };
@@ -92,7 +91,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "Usage: " << argv[0] << " <filename>\n";
     return 1;
   }
-  
+
   std::fstream file(argv[1]);
   std::string text;
 
@@ -100,10 +99,10 @@ int main(int argc, char* argv[]) {
   while (true) {
     std::string line;
     std::getline(file, line);
+    text += line;
     if (file.eof()) {
       break;
     }
-    text += line;
   }
 
   Pascal::Parser parser(text);

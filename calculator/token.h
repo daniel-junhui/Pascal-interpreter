@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <format>
 #include <optional>
 #include <string>
 #include <variant>

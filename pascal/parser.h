@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include "lexer.h"
 #include "AST.h"
 

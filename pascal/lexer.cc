@@ -24,7 +24,6 @@ void Lexer::error() {
 
 void Lexer::advance() {
   pos_++;
-
   if (pos_ == text_.end()) {
     current_char_ = std::nullopt;
   } else {

@@ -1,4 +1,4 @@
-env = Environment(CXXFLAGS = '-std=c++20')
+env = Environment(CXXFLAGS = '-std=c++2a')
 
 # compile main.cc to main.o
 env.Object('main.o', 'main.cc')

@@ -2,6 +2,9 @@
 
 #include <optional>
 #include <string>
+#include <variant>
+#include <cassert>
+#include <stdexcept>
 
 namespace Pascal {
 
@@ -23,6 +26,40 @@ class Token {
     SEMI,
     ID,
   };
+  // Type to string
+  static std::string type_to_string(Type type) {
+    switch (type) {
+      case Type::INTEGER:
+        return "INTEGER";
+      case Type::PLUS:
+        return "PLUS";
+      case Type::MINUS:
+        return "MINUS";
+      case Type::MULTIPLY:
+        return "MULTIPLY";
+      case Type::DIVIDE:
+        return "DIVIDE";
+      case Type::END_OF_FILE:
+        return "EOF";
+      case Type::LEFT_PAREN:
+        return "LEFT_PAREN";
+      case Type::RIGHT_PAREN:
+        return "RIGHT_PAREN";
+      case Type::BEGIN:
+        return "BEGIN";
+      case Type::END:
+        return "END";
+      case Type::DOT:
+        return "DOT";
+      case Type::ASSIGN:
+        return "ASSIGN";
+      case Type::SEMI:
+        return "SEMI";
+      case Type::ID:
+        return "ID";
+    }
+    throw std::runtime_error("Unknown token type");
+  }
 
   using ValueType = std::variant<int, std::string>;
 
@@ -71,6 +108,7 @@ class Token {
       case Type::ID:
         return "Token(ID, " + std::get<std::string>(*value_) + ")";
     }
+    throw std::runtime_error("Unknown token type");
   }
 };
 }  // namespace Pascal
