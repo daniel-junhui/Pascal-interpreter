@@ -1,5 +1,8 @@
+// Copyright 2023 Zhu Junhui
+
 #pragma once
 
+#include <string>
 #include <unordered_map>
 #include "AST.h"
 

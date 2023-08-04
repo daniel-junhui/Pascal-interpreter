@@ -1,6 +1,12 @@
+// Copyright 2023 Zhu Junhui
+
 #pragma once
 
 #include <concepts>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 #include "lexer.h"
 #include "AST.h"
 

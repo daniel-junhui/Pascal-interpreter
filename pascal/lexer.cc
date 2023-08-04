@@ -106,7 +106,7 @@ Token Lexer::get_next_token() {
       return Token(Token::Type::SEMI);
     }
 
-    if (*current_char_ == ':' and peek().has_value() and *peek() == '=') {
+    if (*current_char_ == ':' && peek().has_value() && *peek() == '=') {
       advance();
       advance();
       return Token(Token::Type::ASSIGN);

@@ -1,5 +1,5 @@
-env = Environment(CXXFLAGS = '-std=c++2a')
-
+# use env from parent SConstruct
+env = Environment(CXX = 'g++-10', CXXFLAGS = '-std=c++2a')
 # compile main.cc to main.o
 env.Object('lexer_test.o', 'lexer_test.cc')
 env.Object('parser_test.o', 'parser_test.cc')
