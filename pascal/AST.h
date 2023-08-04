@@ -112,6 +112,8 @@ class UnaryOperation : public AST {
 
   AST* expr() const { return expr_.get(); }
 
+  Operator op() const { return op_; }
+
   ACCEPT_VISITOR
 };
 
