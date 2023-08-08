@@ -15,44 +15,73 @@ namespace Pascal {
 class Token {
  public:
   enum class Type {
-    INTEGER,
+    // variable type
+    INTEGER_TYPE,
+    REAL_TYPE,
+
+    // operator
     PLUS,
     MINUS,
     MULTIPLY,
-    DIVIDE,
+    INTEGER_DIV,
+    REAL_DIV,
+
+    // reserved keywords
+    PROGRAM,
+    VAR,
+    INTEGER,
+    REAL,
+    BEGIN,
+    END,
+
+    // other
     END_OF_FILE,
     LEFT_PAREN,
     RIGHT_PAREN,
-    BEGIN,
-    END,
     DOT,
     ASSIGN,
     SEMI,
     ID,
+    COLON,
+    COMMA,
+    INTEGER_CONST,
+    REAL_CONST,
   };
   // Type to string
   static std::string type_to_string(Type type) {
     switch (type) {
-      case Type::INTEGER:
-        return "INTEGER";
+      case Type::INTEGER_TYPE:
+        return "INTEGER_TYPE";
+      case Type::REAL_TYPE:
+        return "REAL_TYPE";
       case Type::PLUS:
         return "PLUS";
       case Type::MINUS:
         return "MINUS";
       case Type::MULTIPLY:
         return "MULTIPLY";
-      case Type::DIVIDE:
-        return "DIVIDE";
-      case Type::END_OF_FILE:
-        return "EOF";
-      case Type::LEFT_PAREN:
-        return "LEFT_PAREN";
-      case Type::RIGHT_PAREN:
-        return "RIGHT_PAREN";
+      case Type::INTEGER_DIV:
+        return "INTEGER_DIV";
+      case Type::REAL_DIV:
+        return "REAL_DIV";
+      case Type::PROGRAM:
+        return "PROGRAM";
+      case Type::VAR:
+        return "VAR";
+      case Type::INTEGER:
+        return "INTEGER";
+      case Type::REAL:
+        return "REAL";
       case Type::BEGIN:
         return "BEGIN";
       case Type::END:
         return "END";
+      case Type::END_OF_FILE:
+        return "END_OF_FILE";
+      case Type::LEFT_PAREN:
+        return "LEFT_PAREN";
+      case Type::RIGHT_PAREN:
+        return "RIGHT_PAREN";
       case Type::DOT:
         return "DOT";
       case Type::ASSIGN:
@@ -61,11 +90,19 @@ class Token {
         return "SEMI";
       case Type::ID:
         return "ID";
+      case Type::COLON:
+        return "COLON";
+      case Type::COMMA:
+        return "COMMA";
+      case Type::INTEGER_CONST:
+        return "INTEGER_CONST";
+      case Type::REAL_CONST:
+        return "REAL_CONST";
     }
     throw std::runtime_error("Unknown token type");
   }
 
-  using ValueType = std::variant<int, std::string>;
+  using ValueType = std::variant<int, std::string, double>;
 
  private:
   std::optional<ValueType> value_;
@@ -91,7 +128,9 @@ class Token {
         return "Token(MINUS, -)";
       case Type::MULTIPLY:
         return "Token(MULTIPLY, *)";
-      case Type::DIVIDE:
+      case Type::INTEGER_DIV:
+        return "Token(INTEGER_DIV, //)";
+      case Type::REAL_DIV:
         return "Token(DIVIDE, /)";
       case Type::END_OF_FILE:
         return "Token(END_OF_FILE, EOF)";
@@ -111,6 +150,24 @@ class Token {
         return "Token(SEMI, ;)";
       case Type::ID:
         return "Token(ID, " + std::get<std::string>(*value_) + ")";
+      case Type::COLON:
+        return "Token(COLON, :)";
+      case Type::COMMA:
+        return "Token(COMMA, ,)";
+      case Type::INTEGER_CONST:
+        return "Token(INTEGER_CONST, " +
+               std::to_string(std::get<int>(*value_)) + ")";
+      case Type::REAL_CONST:
+        return "Token(REAL_CONST, " +
+               std::to_string(std::get<double>(*value_)) + ")";
+      case Type::PROGRAM:
+        return "Token(PROGRAM)";
+      case Type::VAR:
+        return "Token(VAR)";
+      case Type::INTEGER_TYPE:
+        return "Token(INTEGER_TYPE)";
+      case Type::REAL_TYPE:
+        return "Token(REAL_TYPE)";
     }
     throw std::runtime_error("Unknown token type");
   }

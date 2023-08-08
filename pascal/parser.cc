@@ -17,32 +17,83 @@ void Parser::eat(Token::Type type) {
   }
 }
 
-/*
-program: compound_statement DOT
-compound_statement: BEGIN statement_list END
-statement_list: statement | statement SEMI statement_list
-statement: compound_statement | assignment_statement | empty
-assignment_statement: variable ASSIGN expr
-variable: ID
-empty:
-expr: term ((PLUS | MINUS) term)*
-term: factor ((MUL | DIV) factor)*
-factor: PLUS factor | MINUS factor | INTEGER | LPAREN expr RPAREN | variable
-*/
+std::unique_ptr<Variable> Parser::variable() {
+  auto node = std::make_unique<Variable>(current_token_);
+  eat(Token::Type::ID);
+  return node;
+}
 
-std::unique_ptr<AST> Parser::parse() {
+std::unique_ptr<Program> Parser::parse() {
   auto result = program();
   eat(Token::Type::END_OF_FILE);
   return result;
 }
 
-std::unique_ptr<AST> Parser::program() {
-  auto node = compound_statement();
+std::unique_ptr<Program> Parser::program() {
+  eat(Token::Type::PROGRAM);
+  auto var_node = variable();
+  auto prog_name = var_node->value();
+  eat(Token::Type::SEMI);
+  auto block_node = block();
   eat(Token::Type::DOT);
-  return node;
+  return std::make_unique<Program>(std::move(prog_name), std::move(block_node));
 }
 
-std::unique_ptr<AST> Parser::compound_statement() {
+std::unique_ptr<Block> Parser::block() {
+  auto declarations = this->declarations();
+  auto compound_statement = this->compound_statement();
+  return std::make_unique<Block>(std::move(declarations),
+                                 std::move(compound_statement));
+}
+
+std::vector<std::unique_ptr<VariableDeclaration>> Parser::declarations() {
+  std::vector<std::unique_ptr<VariableDeclaration>> declarations;
+  if (current_token_.type() == Token::Type::VAR) {
+    eat(Token::Type::VAR);
+
+    // here is a tricky part, we need to handle multiple variables and they can be zero or more.
+    while (current_token_.type() == Token::Type::ID) {
+      auto var_decl = variable_declaration();
+      declarations.push_back(std::move(var_decl));
+      eat(Token::Type::SEMI);
+    }
+  }
+  return declarations;
+}
+
+std::unique_ptr<VariableDeclaration> Parser::variable_declaration() {
+
+  auto var_nodes = std::vector<std::unique_ptr<Variable>>();
+
+  // There may be multiple variables declared in one declaration, but must have at least one.
+  auto first_var = variable();
+
+  var_nodes.push_back(std::move(first_var));
+
+  while (current_token_.type() == Token::Type::COMMA) {
+    eat(Token::Type::COMMA);
+    var_nodes.push_back(variable());
+  }
+
+  eat(Token::Type::COLON);
+
+  auto type_node = type();
+
+  return std::make_unique<VariableDeclaration>(std::move(var_nodes),
+                                               std::move(type_node));
+}
+
+std::unique_ptr<Type> Parser::type() {
+  auto token = current_token_;
+  if (token.type() == Token::Type::INTEGER_TYPE) {
+    eat(Token::Type::INTEGER_TYPE);
+  } else {
+    eat(Token::Type::REAL_TYPE);
+  }
+  return std::make_unique<Type>(token);
+}
+
+std::unique_ptr<Compound> Parser::compound_statement() {
   eat(Token::Type::BEGIN);
   auto nodes = statement_list();
   eat(Token::Type::END);
@@ -53,9 +104,9 @@ std::unique_ptr<AST> Parser::compound_statement() {
   return root;
 }
 
-std::vector<std::unique_ptr<AST>> Parser::statement_list() {
+std::vector<std::unique_ptr<NonValueAST>> Parser::statement_list() {
   auto node = statement();
-  std::vector<std::unique_ptr<AST>> results;
+  std::vector<std::unique_ptr<NonValueAST>> results;
   if (node) {
     results.push_back(std::move(node));
   }
@@ -69,7 +120,7 @@ std::vector<std::unique_ptr<AST>> Parser::statement_list() {
   return results;
 }
 
-std::unique_ptr<AST> Parser::statement() {
+std::unique_ptr<NonValueAST> Parser::statement() {
   switch (current_token_.type()) {
     case Token::Type::BEGIN:
       return compound_statement();
@@ -83,24 +134,18 @@ std::unique_ptr<AST> Parser::statement() {
   }
 }
 
-std::unique_ptr<AST> Parser::assignment_statement() {
+std::unique_ptr<Assign> Parser::assignment_statement() {
   auto variable = this->variable();
   eat(Token::Type::ASSIGN);
   auto expr = this->expr();
   return std::make_unique<Assign>(std::move(variable), std::move(expr));
 }
 
-std::unique_ptr<Variable> Parser::variable() {
-  auto node = std::make_unique<Variable>(current_token_);
-  eat(Token::Type::ID);
-  return node;
-}
-
-std::unique_ptr<AST> Parser::empty() {
+std::nullptr_t Parser::empty() {
   return nullptr;
 }
 
-std::unique_ptr<AST> Parser::factor() {
+std::unique_ptr<ValueAST> Parser::factor() {
   auto token = current_token_;
   auto type = token.type();
   switch (type) {
@@ -110,8 +155,9 @@ std::unique_ptr<AST> Parser::factor() {
       return std::make_unique<UnaryOperation>(factor(), token);
       break;
 
-    case Token::Type::INTEGER:
-      eat(Token::Type::INTEGER);
+    case Token::Type::INTEGER_CONST:
+    case Token::Type::REAL_CONST:
+      eat(type);
       return std::make_unique<Number>(token);
       break;
 
@@ -133,7 +179,7 @@ std::unique_ptr<AST> Parser::factor() {
   return nullptr;
 }
 
-std::unique_ptr<AST> Parser::expr() {
+std::unique_ptr<ValueAST> Parser::expr() {
   auto node = term();
 
   while (current_token_.type() == Token::Type::PLUS ||
@@ -150,16 +196,19 @@ std::unique_ptr<AST> Parser::expr() {
   return node;
 }
 
-std::unique_ptr<AST> Parser::term() {
+std::unique_ptr<ValueAST> Parser::term() {
   auto node = factor();
 
   while (current_token_.type() == Token::Type::MULTIPLY ||
-         current_token_.type() == Token::Type::DIVIDE) {
+         current_token_.type() == Token::Type::INTEGER_DIV ||
+         current_token_.type() == Token::Type::REAL_DIV) {
     auto token = current_token_;
     if (token.type() == Token::Type::MULTIPLY) {
       eat(Token::Type::MULTIPLY);
-    } else if (token.type() == Token::Type::DIVIDE) {
-      eat(Token::Type::DIVIDE);
+    } else if (token.type() == Token::Type::INTEGER_DIV) {
+      eat(Token::Type::INTEGER_DIV);
+    } else if (token.type() == Token::Type::REAL_DIV) {
+      eat(Token::Type::REAL_DIV);
     }
     node = std::make_unique<BinaryOperation>(std::move(node), factor(), token);
   }

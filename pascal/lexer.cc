@@ -7,6 +7,11 @@ namespace Pascal {
 static const std::unordered_map<std::string, Token> RESERVED_KEYWORDS = {
     {"BEGIN", Token(Token::Type::BEGIN)},
     {"END", Token(Token::Type::END)},
+    {"DIV", Token(Token::Type::INTEGER_DIV)},
+    {"PROGRAM", Token(Token::Type::PROGRAM)},
+    {"VAR", Token(Token::Type::VAR)},
+    {"INTEGER", Token(Token::Type::INTEGER)},
+    {"REAL", Token(Token::Type::REAL)},
 };
 
 std::optional<char> Lexer::peek() {
@@ -16,6 +21,13 @@ std::optional<char> Lexer::peek() {
   } else {
     return *peek_pos;
   }
+}
+
+void Lexer::skip_comment() {
+  while (current_char_.has_value() && *current_char_ != '}') {
+    advance();
+  }
+  advance();
 }
 
 void Lexer::error() {
@@ -37,15 +49,6 @@ void Lexer::skip_whitespace() {
   }
 }
 
-int Lexer::integer() {
-  std::string result;
-  while (current_char_.has_value() && std::isdigit(*current_char_)) {
-    result.push_back(*current_char_);
-    advance();
-  }
-  return std::stoi(result);
-}
-
 Token Lexer::id() {
   std::string result;
   while (current_char_.has_value() && std::isalnum(*current_char_)) {
@@ -60,6 +63,26 @@ Token Lexer::id() {
   return Token(Token::Type::ID, result);
 }
 
+Token Lexer::number() {
+  std::string result;
+  while (current_char_.has_value() && std::isdigit(*current_char_)) {
+    result.push_back(*current_char_);
+    advance();
+  }
+
+  if (current_char_.has_value() && *current_char_ == '.') {
+    result.push_back(*current_char_);
+    advance();
+    while (current_char_.has_value() && std::isdigit(*current_char_)) {
+      result.push_back(*current_char_);
+      advance();
+    }
+    return Token(Token::Type::REAL_CONST, std::stod(result));
+  } else {
+    return Token(Token::Type::INTEGER_CONST, std::stoi(result));
+  }
+}
+
 Token Lexer::get_next_token() {
   while (current_char_.has_value()) {
     if (std::isspace(*current_char_)) {
@@ -67,8 +90,24 @@ Token Lexer::get_next_token() {
       continue;
     }
 
+    if (*current_char_ == '{') {
+      advance();
+      skip_comment();
+      continue;
+    }
+
     if (std::isdigit(*current_char_)) {
-      return Token(Token::Type::INTEGER, integer());
+      return number();
+    }
+
+    if (*current_char_ == ':') {
+      advance();
+      return Token(Token::Type::COLON);
+    }
+
+    if (*current_char_ == ',') {
+      advance();
+      return Token(Token::Type::COMMA);
     }
 
     if (*current_char_ == '+') {
@@ -88,7 +127,7 @@ Token Lexer::get_next_token() {
 
     if (*current_char_ == '/') {
       advance();
-      return Token(Token::Type::DIVIDE);
+      return Token(Token::Type::REAL_DIV);
     }
 
     if (*current_char_ == '(') {
