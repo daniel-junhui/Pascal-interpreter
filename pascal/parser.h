@@ -7,8 +7,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "lexer.h"
 #include "AST.h"
+#include "lexer.h"
 
 namespace Pascal {
 
@@ -23,7 +23,7 @@ class Parser {
       : lexer_(std::forward<T>(text)),
         current_token_(lexer_.get_next_token()) {}
 
-  std::unique_ptr<AST> parse();
+  std::unique_ptr<Program> parse();
 
   /*
 program: compound_statement DOT
@@ -42,25 +42,33 @@ factor: PLUS factor | MINUS factor | INTEGER | LPAREN expr RPAREN | variable
 
   void eat(Token::Type type);
 
-  std::unique_ptr<AST> program();
+  std::unique_ptr<Program> program();
 
-  std::unique_ptr<AST> compound_statement();
+  std::unique_ptr<Block> block();
 
-  std::vector<std::unique_ptr<AST>> statement_list();
+  std::vector<std::unique_ptr<VariableDeclaration>> declarations();
 
-  std::unique_ptr<AST> statement();
+  std::unique_ptr<VariableDeclaration> variable_declaration();
 
-  std::unique_ptr<AST> assignment_statement();
+  std::unique_ptr<Type> type();
+
+  std::unique_ptr<Compound> compound_statement();
+
+  std::vector<std::unique_ptr<NonValueAST>> statement_list();
+
+  std::unique_ptr<NonValueAST> statement();
+
+  std::unique_ptr<Assign> assignment_statement();
+
+  std::nullptr_t empty();
+
+  std::unique_ptr<ValueAST> expr();
+
+  std::unique_ptr<ValueAST> term();
+
+  std::unique_ptr<ValueAST> factor();
 
   std::unique_ptr<Variable> variable();
-
-  std::unique_ptr<AST> empty();
-
-  std::unique_ptr<AST> factor();
-
-  std::unique_ptr<AST> term();
-
-  std::unique_ptr<AST> expr();
 };
 
 }  // namespace Pascal

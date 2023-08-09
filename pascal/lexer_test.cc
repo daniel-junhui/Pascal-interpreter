@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     if (token.type() == Pascal::Token::Type::END_OF_FILE) {
       break;
     }
-    std::cout << '\t' << token() << '\n';
+    std::cout << '\t' << token.to_string() << '\n';
   }
 
   return 0;

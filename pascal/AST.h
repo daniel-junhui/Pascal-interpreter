@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 #include "meta.h"
 
@@ -12,11 +13,18 @@ namespace Pascal {
 
 class Visitor;
 
-class AST {
+class NonValueAST {
  public:
-  virtual ~AST() = default;
+  virtual ~NonValueAST() = default;
+  virtual void accept(Visitor* visitor) const = 0;
+};
 
-  virtual int accept(Visitor* visitor) = 0;
+class ValueAST {
+ public:
+  virtual ~ValueAST() = default;
+  using Value = std::variant<int, double>;
+  enum class ValueType { INTEGER, REAL };
+  virtual Value accept(Visitor* visitor) const = 0;
 };
 
 class BinaryOperation;
@@ -25,39 +33,212 @@ class Number;
 class Compound;
 class Assign;
 class Variable;
+class Program;
+class Block;
+class VariableDeclaration;
+class Type;
 
 class Visitor {
  public:
-  virtual int visit(const BinaryOperation* binary_op) = 0;
-  virtual int visit(const UnaryOperation* unary_op) = 0;
-  virtual int visit(const Number* number) = 0;
-  virtual int visit(const Compound* compound) = 0;
-  virtual int visit(const Assign* assign) = 0;
-  virtual int visit(const Variable* variable) = 0;
+  virtual ValueAST::Value visit(const BinaryOperation*) = 0;
+  virtual ValueAST::Value visit(const UnaryOperation*) = 0;
+  virtual ValueAST::Value visit(const Number*) = 0;
+  virtual ValueAST::Value visit(const Variable*) = 0;
+  virtual void visit(const Compound*) = 0;
+  virtual void visit(const Assign*) = 0;
+  virtual void visit(const Program*) = 0;
+  virtual void visit(const Block*) = 0;
+  virtual void visit(const VariableDeclaration*) = 0;
+  virtual ValueAST::ValueType visit(const Type*) = 0;
 };
 
-#define ACCEPT_VISITOR                    \
-  int accept(Visitor* visitor) override { \
-    return visitor->visit(this);          \
+class Block : public NonValueAST {
+ private:
+  std::vector<std::unique_ptr<VariableDeclaration>> declarations_;
+  std::unique_ptr<Compound> compound_statement_;
+
+ public:
+  explicit Block(std::vector<std::unique_ptr<VariableDeclaration>> declarations,
+                 std::unique_ptr<Compound> compound_statement)
+      : declarations_(std::move(declarations)),
+        compound_statement_(std::move(compound_statement)) {}
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+
+  const std::vector<std::unique_ptr<VariableDeclaration>>& declarations()
+      const {
+    return declarations_;
   }
 
-class BinaryOperation : public AST {
+  Compound* compound_statement() const { return compound_statement_.get(); }
+};
+
+class Type {
+ private:
+  ValueAST::ValueType value_;
+
+ public:
+  explicit Type(Token token) {
+    switch (token.type()) {
+      case Token::Type::INTEGER_TYPE:
+        value_ = ValueAST::ValueType::INTEGER;
+        break;
+      case Token::Type::REAL_TYPE:
+        value_ = ValueAST::ValueType::REAL;
+        break;
+      default:
+        throw std::runtime_error("Invalid type");
+    }
+  }
+
+  ValueAST::ValueType accept(Visitor* visitor) { return visitor->visit(this); }
+
+  std::string to_string() const {
+    switch (value_) {
+      case ValueAST::ValueType::INTEGER:
+        return "INTEGER";
+      case ValueAST::ValueType::REAL:
+        return "REAL";
+      default:
+        throw std::runtime_error("Invalid type");
+    }
+  }
+
+  ValueAST::ValueType value() const { return value_; }
+};
+
+class Variable : public ValueAST {
+ private:
+  std::string value_;
+
+ public:
+  explicit Variable(Token token)
+      : value_(std::get<std::string>(token.value())) {
+    assert(token.type() == Token::Type::ID);
+  }
+
+  const std::string& value() const { return value_; }
+
+  ValueAST::Value accept(Visitor* visitor) const override {
+    return visitor->visit(this);
+  }
+};
+
+class VariableDeclaration : public NonValueAST {
+ private:
+  std::vector<std::unique_ptr<Variable>> variables_;
+  std::unique_ptr<Type> type_;
+
+ public:
+  explicit VariableDeclaration(std::vector<std::unique_ptr<Variable>> variables,
+                               std::unique_ptr<Type> type)
+      : variables_(std::move(variables)), type_(std::move(type)) {}
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+
+  Type* type() const { return type_.get(); }
+
+  const std::vector<std::unique_ptr<Variable>>& variables() const {
+    return variables_;
+  }
+};
+
+class Program : public NonValueAST {
+ private:
+  std::string name_;
+  std::unique_ptr<Block> block_;
+
+ public:
+  explicit Program(std::string name, std::unique_ptr<Block> block)
+      : name_(std::move(name)), block_(std::move(block)) {}
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+
+  const std::string& name() const { return name_; }
+
+  Block* block() const { return block_.get(); }
+};
+
+class Number : public ValueAST {
+ private:
+  std::variant<int, double> value_;
+  ValueAST::ValueType type_;
+
+ public:
+  explicit Number(Token token) {
+    switch (token.type()) {
+      case Token::Type::INTEGER_CONST:
+        type_ = ValueAST::ValueType::INTEGER;
+        value_ = std::get<int>(token.value());
+        break;
+      case Token::Type::REAL_CONST:
+        type_ = ValueAST::ValueType::REAL;
+        value_ = std::get<double>(token.value());
+        break;
+      default:
+        throw std::runtime_error("Invalid token type");
+    }
+  }
+
+  std::variant<int, double> value() const { return value_; }
+
+  ValueAST::ValueType type() const { return type_; }
+
+  ValueAST::Value accept(Visitor* visitor) const override {
+    return visitor->visit(this);
+  }
+};
+
+class Assign : public NonValueAST {
+ private:
+  std::unique_ptr<Variable> left_;
+  std::unique_ptr<ValueAST> right_;
+
+ public:
+  Assign(std::unique_ptr<Variable> left, std::unique_ptr<ValueAST> right)
+      : left_(std::move(left)), right_(std::move(right)) {}
+
+  Variable* left() const { return left_.get(); }
+
+  ValueAST* right() const { return right_.get(); }
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+};
+
+class Compound : public NonValueAST {
+ private:
+  std::vector<std::unique_ptr<NonValueAST>> children_;
+
+ public:
+  void add_child(std::unique_ptr<NonValueAST> child) {
+    children_.emplace_back(std::move(child));
+  }
+
+  const std::vector<std::unique_ptr<NonValueAST>>& children() const {
+    return children_;
+  }
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+};
+
+class BinaryOperation : public ValueAST {
  public:
   enum class Operator {
     PLUS,
     MINUS,
     MULTIPLY,
-    DIVIDE,
+    INTEGER_DIV,
+    REAL_DIV,
   };
 
  private:
-  std::unique_ptr<AST> left_;
-  std::unique_ptr<AST> right_;
+  std::unique_ptr<ValueAST> left_;
+  std::unique_ptr<ValueAST> right_;
   Operator op_;
 
  public:
-  explicit BinaryOperation(std::unique_ptr<AST> left,
-                           std::unique_ptr<AST> right, Token op_token)
+  explicit BinaryOperation(std::unique_ptr<ValueAST> left,
+                           std::unique_ptr<ValueAST> right, Token op_token)
       : left_(std::move(left)), right_(std::move(right)) {
     switch (op_token.type()) {
       case Token::Type::PLUS:
@@ -69,24 +250,29 @@ class BinaryOperation : public AST {
       case Token::Type::MULTIPLY:
         op_ = Operator::MULTIPLY;
         break;
-      case Token::Type::DIVIDE:
-        op_ = Operator::DIVIDE;
+      case Token::Type::INTEGER_DIV:
+        op_ = Operator::INTEGER_DIV;
+        break;
+      case Token::Type::REAL_DIV:
+        op_ = Operator::REAL_DIV;
         break;
       default:
         throw std::runtime_error("Invalid operator");
     }
   }
 
-  AST* left() const { return left_.get(); }
+  ValueAST* left() const { return left_.get(); }
 
-  AST* right() const { return right_.get(); }
+  ValueAST* right() const { return right_.get(); }
 
   Operator op() const { return op_; }
 
-  ACCEPT_VISITOR
+  ValueAST::Value accept(Visitor* visitor) const override {
+    return visitor->visit(this);
+  }
 };
 
-class UnaryOperation : public AST {
+class UnaryOperation : public ValueAST {
  public:
   enum class Operator {
     PLUS,
@@ -94,11 +280,11 @@ class UnaryOperation : public AST {
   };
 
  private:
-  std::unique_ptr<AST> expr_;
+  std::unique_ptr<ValueAST> expr_;
   Operator op_;
 
  public:
-  explicit UnaryOperation(std::unique_ptr<AST> expr, Token op_token)
+  explicit UnaryOperation(std::unique_ptr<ValueAST> expr, Token op_token)
       : expr_(std::move(expr)) {
     switch (op_token.type()) {
       case Token::Type::PLUS:
@@ -112,73 +298,13 @@ class UnaryOperation : public AST {
     }
   }
 
-  AST* expr() const { return expr_.get(); }
+  ValueAST* expr() const { return expr_.get(); }
 
   Operator op() const { return op_; }
 
-  ACCEPT_VISITOR
-};
-
-class Number : public AST {
- private:
-  int value_;
-
- public:
-  explicit Number(Token token) {
-    assert(token.type() == Token::Type::INTEGER);
-    value_ = std::get<int>(token.value());
+  ValueAST::Value accept(Visitor* visitor) const override {
+    return visitor->visit(this);
   }
-
-  int value() const { return value_; }
-
-  ACCEPT_VISITOR
-};
-
-class Compound : public AST {
- private:
-  std::vector<std::unique_ptr<AST>> children_;
-
- public:
-  void add_child(std::unique_ptr<AST> child) {
-    children_.push_back(std::move(child));
-  }
-
-  const std::vector<std::unique_ptr<AST>>& children() const {
-    return children_;
-  }
-
-  ACCEPT_VISITOR
-};
-
-class Variable : public AST {
- private:
-  std::string value_;
-
- public:
-  explicit Variable(Token token)
-      : value_(std::get<std::string>(token.value())) {
-    assert(token.type() == Token::Type::ID);
-  }
-
-  const std::string& value() const { return value_; }
-
-  ACCEPT_VISITOR
-};
-
-class Assign : public AST {
- private:
-  std::unique_ptr<Variable> left_;
-  std::unique_ptr<AST> right_;
-
- public:
-  Assign(std::unique_ptr<Variable> left, std::unique_ptr<AST> right)
-      : left_(std::move(left)), right_(std::move(right)) {}
-
-  Variable* left() const { return left_.get(); }
-
-  AST* right() const { return right_.get(); }
-
-  ACCEPT_VISITOR
 };
 
 }  // namespace Pascal

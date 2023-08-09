@@ -32,11 +32,13 @@ class Lexer {
 
   void skip_whitespace();
 
-  int integer();
-
   Token id();
 
+  Token number();
+
   std::optional<char> peek();
+
+  void skip_comment();
 
  public:
   Token get_next_token();
