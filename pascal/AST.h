@@ -24,6 +24,17 @@ class ValueAST {
   virtual ~ValueAST() = default;
   using Value = std::variant<int, double>;
   enum class ValueType { INTEGER, REAL };
+  // Type to string
+  static std::string type_to_string(ValueType type) {
+    switch (type) {
+      case ValueType::INTEGER:
+        return "INTEGER";
+      case ValueType::REAL:
+        return "REAL";
+      default:
+        throw std::runtime_error("Invalid type");
+    }
+  }
   virtual Value accept(Visitor* visitor) const = 0;
 };
 
