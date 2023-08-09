@@ -16,7 +16,7 @@ class Visitor;
 class NonValueAST {
  public:
   virtual ~NonValueAST() = default;
-  virtual void accept(Visitor* visitor) = 0;
+  virtual void accept(Visitor* visitor) const = 0;
 };
 
 class ValueAST {
@@ -24,7 +24,7 @@ class ValueAST {
   virtual ~ValueAST() = default;
   using Value = std::variant<int, double>;
   enum class ValueType { INTEGER, REAL };
-  virtual Value accept(Visitor* visitor) = 0;
+  virtual Value accept(Visitor* visitor) const = 0;
 };
 
 class BinaryOperation;
@@ -58,7 +58,19 @@ class Block : public NonValueAST {
   std::unique_ptr<Compound> compound_statement_;
 
  public:
-  void accept(Visitor* visitor) override { visitor->visit(this); }
+  explicit Block(std::vector<std::unique_ptr<VariableDeclaration>> declarations,
+                 std::unique_ptr<Compound> compound_statement)
+      : declarations_(std::move(declarations)),
+        compound_statement_(std::move(compound_statement)) {}
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+
+  const std::vector<std::unique_ptr<VariableDeclaration>>& declarations()
+      const {
+    return declarations_;
+  }
+
+  Compound* compound_statement() const { return compound_statement_.get(); }
 };
 
 class Type {
@@ -66,7 +78,33 @@ class Type {
   ValueAST::ValueType value_;
 
  public:
+  explicit Type(Token token) {
+    switch (token.type()) {
+      case Token::Type::INTEGER_TYPE:
+        value_ = ValueAST::ValueType::INTEGER;
+        break;
+      case Token::Type::REAL_TYPE:
+        value_ = ValueAST::ValueType::REAL;
+        break;
+      default:
+        throw std::runtime_error("Invalid type");
+    }
+  }
+
   ValueAST::ValueType accept(Visitor* visitor) { return visitor->visit(this); }
+
+  std::string to_string() const {
+    switch (value_) {
+      case ValueAST::ValueType::INTEGER:
+        return "INTEGER";
+      case ValueAST::ValueType::REAL:
+        return "REAL";
+      default:
+        throw std::runtime_error("Invalid type");
+    }
+  }
+
+  ValueAST::ValueType value() const { return value_; }
 };
 
 class Variable : public ValueAST {
@@ -81,7 +119,7 @@ class Variable : public ValueAST {
 
   const std::string& value() const { return value_; }
 
-  ValueAST::Value accept(Visitor* visitor) override {
+  ValueAST::Value accept(Visitor* visitor) const override {
     return visitor->visit(this);
   }
 };
@@ -92,7 +130,17 @@ class VariableDeclaration : public NonValueAST {
   std::unique_ptr<Type> type_;
 
  public:
-  void accept(Visitor* visitor) override { visitor->visit(this); }
+  explicit VariableDeclaration(std::vector<std::unique_ptr<Variable>> variables,
+                               std::unique_ptr<Type> type)
+      : variables_(std::move(variables)), type_(std::move(type)) {}
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+
+  Type* type() const { return type_.get(); }
+
+  const std::vector<std::unique_ptr<Variable>>& variables() const {
+    return variables_;
+  }
 };
 
 class Program : public NonValueAST {
@@ -101,7 +149,14 @@ class Program : public NonValueAST {
   std::unique_ptr<Block> block_;
 
  public:
-  void accept(Visitor* visitor) override { visitor->visit(this); }
+  explicit Program(std::string name, std::unique_ptr<Block> block)
+      : name_(std::move(name)), block_(std::move(block)) {}
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+
+  const std::string& name() const { return name_; }
+
+  Block* block() const { return block_.get(); }
 };
 
 class Number : public ValueAST {
@@ -129,7 +184,7 @@ class Number : public ValueAST {
 
   ValueAST::ValueType type() const { return type_; }
 
-  ValueAST::Value accept(Visitor* visitor) override {
+  ValueAST::Value accept(Visitor* visitor) const override {
     return visitor->visit(this);
   }
 };
@@ -147,31 +202,23 @@ class Assign : public NonValueAST {
 
   ValueAST* right() const { return right_.get(); }
 
-  void accept(Visitor* visitor) override { visitor->visit(this); }
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
 };
 
 class Compound : public NonValueAST {
  private:
-  std::vector<
-      std::variant<std::unique_ptr<ValueAST>, std::unique_ptr<NonValueAST>>>
-      children_;
+  std::vector<std::unique_ptr<NonValueAST>> children_;
 
  public:
-  void add_child(std::unique_ptr<ValueAST> child) {
-    children_.emplace_back(std::move(child));
-  }
-
   void add_child(std::unique_ptr<NonValueAST> child) {
     children_.emplace_back(std::move(child));
   }
 
-  const std::vector<
-      std::variant<std::unique_ptr<ValueAST>, std::unique_ptr<NonValueAST>>>&
-  children() const {
+  const std::vector<std::unique_ptr<NonValueAST>>& children() const {
     return children_;
   }
 
-  void accept(Visitor* visitor) override { visitor->visit(this); }
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
 };
 
 class BinaryOperation : public ValueAST {
@@ -220,7 +267,7 @@ class BinaryOperation : public ValueAST {
 
   Operator op() const { return op_; }
 
-  ValueAST::Value accept(Visitor* visitor) override {
+  ValueAST::Value accept(Visitor* visitor) const override {
     return visitor->visit(this);
   }
 };
@@ -255,7 +302,7 @@ class UnaryOperation : public ValueAST {
 
   Operator op() const { return op_; }
 
-  ValueAST::Value accept(Visitor* visitor) override {
+  ValueAST::Value accept(Visitor* visitor) const override {
     return visitor->visit(this);
   }
 };

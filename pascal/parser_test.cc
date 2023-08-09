@@ -5,8 +5,11 @@
 #include <iostream>
 #include <string>
 #include "io.h"
+#include "spdlog/spdlog.h"
 
 class ReadVisitor : public Pascal::Visitor {
+  using Value = Pascal::ValueAST::Value;
+
  private:
   int depth_ = 0;
 
@@ -24,7 +27,7 @@ class ReadVisitor : public Pascal::Visitor {
   }
 
  public:
-  int visit(const Pascal::BinaryOperation* binary_op) override {
+  Value visit(const Pascal::BinaryOperation* binary_op) override {
     pre_print_depth() << "BinaryOperation\n";
     pre_print_depth() << "left: \n";
     ++depth_;
@@ -38,7 +41,7 @@ class ReadVisitor : public Pascal::Visitor {
     return 0;
   }
 
-  int visit(const Pascal::UnaryOperation* unary_op) override {
+  Value visit(const Pascal::UnaryOperation* unary_op) override {
     pre_print_depth() << "UnaryOperation\n";
     pre_print_depth() << "expr: \n";
     ++depth_;
@@ -48,13 +51,19 @@ class ReadVisitor : public Pascal::Visitor {
     return 0;
   }
 
-  int visit(const Pascal::Number* number) override {
+  Value visit(const Pascal::Number* number) override {
     pre_print_depth() << "Number\n";
-    pre_print_depth() << "value: " << number->value() << '\n';
-    return 0;
+    if (std::holds_alternative<double>(number->value())) {
+      pre_print_depth() << "value: " << std::get<double>(number->value())
+                        << '\n';
+      return 0;
+    } else {
+      pre_print_depth() << "value: " << std::get<int>(number->value()) << '\n';
+      return 0;
+    }
   }
 
-  int visit(const Pascal::Compound* compound) override {
+  void visit(const Pascal::Compound* compound) override {
     pre_print_depth() << "Compound\n";
     pre_print_depth() << "children: \n";
     ++depth_;
@@ -62,11 +71,9 @@ class ReadVisitor : public Pascal::Visitor {
       child->accept(this);
     }
     --depth_;
-
-    return 0;
   }
 
-  int visit(const Pascal::Assign* assign) override {
+  void visit(const Pascal::Assign* assign) override {
     pre_print_depth() << "Assign\n";
     pre_print_depth() << "left: \n";
     ++depth_;
@@ -77,16 +84,61 @@ class ReadVisitor : public Pascal::Visitor {
     ++depth_;
     assign->right()->accept(this);
     --depth_;
-
-    return 0;
   }
 
-  int visit(const Pascal::Variable* variable) override {
+  Value visit(const Pascal::Variable* variable) override {
     pre_print_depth() << "Variable\n";
     pre_print_depth() << "value: " << variable->value() << '\n';
     return 0;
   }
+
+  Pascal::ValueAST::ValueType visit(const Pascal::Type* type) override {
+    pre_print_depth() << "Type\n";
+    pre_print_depth() << "value: " << type->to_string() << '\n';
+    return {};
+  }
+
+  void visit(const Pascal::VariableDeclaration* var_decl) override {
+    pre_print_depth() << "VariableDeclaration\n";
+    pre_print_depth() << "type: \n";
+    ++depth_;
+    var_decl->type()->accept(this);
+    --depth_;
+
+    pre_print_depth() << "variables: \n";
+    ++depth_;
+    for (const auto& var : var_decl->variables()) {
+      var->accept(this);
+    }
+    --depth_;
+  }
+
+  void visit(const Pascal::Block* block) override {
+    pre_print_depth() << "Block\n";
+    pre_print_depth() << "declarations: \n";
+    ++depth_;
+    for (const auto& declaration : block->declarations()) {
+      declaration->accept(this);
+    }
+    --depth_;
+
+    pre_print_depth() << "compound_statement: \n";
+    ++depth_;
+    block->compound_statement()->accept(this);
+    --depth_;
+  }
+
+  void visit(const Pascal::Program* program) override {
+    pre_print_depth() << "Program\n";
+    pre_print_depth() << "name: " << program->name() << '\n';
+    pre_print_depth() << "block: \n";
+    ++depth_;
+    program->block()->accept(this);
+    --depth_;
+  }
 };
+
+// set log level to debug
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
@@ -98,7 +150,7 @@ int main(int argc, char* argv[]) {
 
   Pascal::Parser parser(text);
   auto tree = parser.parse();
-
+  spdlog::set_level(spdlog::level::debug);
   ReadVisitor visitor;
   tree->accept(&visitor);
 

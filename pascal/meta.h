@@ -29,8 +29,6 @@ class Token {
     // reserved keywords
     PROGRAM,
     VAR,
-    INTEGER,
-    REAL,
     BEGIN,
     END,
 
@@ -68,10 +66,6 @@ class Token {
         return "PROGRAM";
       case Type::VAR:
         return "VAR";
-      case Type::INTEGER:
-        return "INTEGER";
-      case Type::REAL:
-        return "REAL";
       case Type::BEGIN:
         return "BEGIN";
       case Type::END:
@@ -118,10 +112,8 @@ class Token {
   ValueType value() const { return *value_; }
 
   // operator to std::string
-  std::string operator()() const {
+  std::string to_string() const {
     switch (type_) {
-      case Type::INTEGER:
-        return "Token(INTEGER, " + std::to_string(std::get<int>(*value_)) + ")";
       case Type::PLUS:
         return "Token(PLUS, +)";
       case Type::MINUS:

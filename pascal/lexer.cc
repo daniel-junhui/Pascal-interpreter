@@ -10,8 +10,8 @@ static const std::unordered_map<std::string, Token> RESERVED_KEYWORDS = {
     {"DIV", Token(Token::Type::INTEGER_DIV)},
     {"PROGRAM", Token(Token::Type::PROGRAM)},
     {"VAR", Token(Token::Type::VAR)},
-    {"INTEGER", Token(Token::Type::INTEGER)},
-    {"REAL", Token(Token::Type::REAL)},
+    {"INTEGER", Token(Token::Type::INTEGER_TYPE)},
+    {"REAL", Token(Token::Type::REAL_TYPE)},
 };
 
 std::optional<char> Lexer::peek() {
@@ -100,6 +100,12 @@ Token Lexer::get_next_token() {
       return number();
     }
 
+    if (*current_char_ == ':' && peek().has_value() && *peek() == '=') {
+      advance();
+      advance();
+      return Token(Token::Type::ASSIGN);
+    }
+
     if (*current_char_ == ':') {
       advance();
       return Token(Token::Type::COLON);
@@ -143,12 +149,6 @@ Token Lexer::get_next_token() {
     if (*current_char_ == ';') {
       advance();
       return Token(Token::Type::SEMI);
-    }
-
-    if (*current_char_ == ':' && peek().has_value() && *peek() == '=') {
-      advance();
-      advance();
-      return Token(Token::Type::ASSIGN);
     }
 
     if (*current_char_ == '.') {

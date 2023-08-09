@@ -6,7 +6,7 @@
 namespace Pascal {
 
 void Parser::error() {
-  throw std::runtime_error("Invalid syntax");
+  throw std::runtime_error("Invalid syntax in parser");
 }
 
 void Parser::eat(Token::Type type) {
