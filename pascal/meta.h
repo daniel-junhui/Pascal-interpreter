@@ -44,6 +44,8 @@ class Token {
     COMMA,
     INTEGER_CONST,
     REAL_CONST,
+
+    PROCEDURE,
   };
   // Type to string
   static std::string type_to_string(Type type) {

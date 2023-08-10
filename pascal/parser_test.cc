@@ -136,6 +136,15 @@ class ReadVisitor : public Pascal::Visitor {
     program->block()->accept(this);
     --depth_;
   }
+
+  void visit(const Pascal::ProcedureDeclaration *procedure_decl) override {
+    pre_print_depth() << "ProcedureDeclaration\n";
+    pre_print_depth() << "name: " << procedure_decl->name() << '\n';
+    pre_print_depth() << "block: \n";
+    ++depth_;
+    procedure_decl->block()->accept(this);
+    --depth_;
+  }
 };
 
 // set log level to debug

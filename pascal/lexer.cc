@@ -12,6 +12,7 @@ static const std::unordered_map<std::string, Token> RESERVED_KEYWORDS = {
     {"VAR", Token(Token::Type::VAR)},
     {"INTEGER", Token(Token::Type::INTEGER_TYPE)},
     {"REAL", Token(Token::Type::REAL_TYPE)},
+    {"PROCEDURE", Token(Token::Type::PROCEDURE)},
 };
 
 std::optional<char> Lexer::peek() {

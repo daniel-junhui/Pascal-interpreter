@@ -48,6 +48,7 @@ class Program;
 class Block;
 class VariableDeclaration;
 class Type;
+class ProcedureDeclaration;
 
 class Visitor {
  public:
@@ -61,15 +62,18 @@ class Visitor {
   virtual void visit(const Block*) = 0;
   virtual void visit(const VariableDeclaration*) = 0;
   virtual ValueAST::ValueType visit(const Type*) = 0;
+  virtual void visit(const ProcedureDeclaration*) = 0;
 };
 
 class Block : public NonValueAST {
  private:
   std::vector<std::unique_ptr<VariableDeclaration>> declarations_;
+  std::vector<std::unique_ptr<ProcedureDeclaration>> procedures_;
   std::unique_ptr<Compound> compound_statement_;
 
  public:
   explicit Block(std::vector<std::unique_ptr<VariableDeclaration>> declarations,
+                 std::vector<std::unique_ptr<ProcedureDeclaration>> procedures,
                  std::unique_ptr<Compound> compound_statement)
       : declarations_(std::move(declarations)),
         compound_statement_(std::move(compound_statement)) {}
@@ -82,6 +86,22 @@ class Block : public NonValueAST {
   }
 
   Compound* compound_statement() const { return compound_statement_.get(); }
+};
+
+class ProcedureDeclaration : public NonValueAST {
+ private:
+  std::string name_;
+  std::unique_ptr<Block> block_;
+
+ public:
+  explicit ProcedureDeclaration(std::string name, std::unique_ptr<Block> block)
+      : name_(std::move(name)), block_(std::move(block)) {}
+
+  void accept(Visitor* visitor) const override { visitor->visit(this); }
+
+  const std::string& name() const { return name_; }
+
+  Block* block() const { return block_.get(); }
 };
 
 class Type {

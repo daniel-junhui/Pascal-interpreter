@@ -46,7 +46,9 @@ factor: PLUS factor | MINUS factor | INTEGER | LPAREN expr RPAREN | variable
 
   std::unique_ptr<Block> block();
 
-  std::vector<std::unique_ptr<VariableDeclaration>> declarations();
+  std::pair<std::vector<std::unique_ptr<VariableDeclaration>>,
+            std::vector<std::unique_ptr<ProcedureDeclaration>>>
+  declarations();
 
   std::unique_ptr<VariableDeclaration> variable_declaration();
 

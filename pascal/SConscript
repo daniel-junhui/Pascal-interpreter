@@ -16,10 +16,10 @@ env.Object('symbol_table.o', 'symbol_table.cc')
 env.Object('symbol_table_test.o', 'symbol_table_test.cc')
 env.Program('symbol_table_test', ['symbol_table_test.o', 'symbol_table.o', 'parser.o', 'lexer.o'])
 
-# interpreter
-env.Object('interpreter.o', 'interpreter.cc')
-env.Object('main.o', 'interpreter_main.cc')
-env.Program('interpreter', ['main.o', 'interpreter.o', 'lexer.o', 'parser.o'])
+# # interpreter
+# env.Object('interpreter.o', 'interpreter.cc')
+# env.Object('main.o', 'interpreter_main.cc')
+# env.Program('interpreter', ['main.o', 'interpreter.o', 'lexer.o', 'parser.o'])
 
 
 

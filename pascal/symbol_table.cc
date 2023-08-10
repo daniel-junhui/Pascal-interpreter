@@ -89,6 +89,10 @@ ValueAST::ValueType SymbolTableBuilder::visit(const Type* type) {
   return {};
 }
 
+void SymbolTableBuilder::visit(const ProcedureDeclaration* node) {
+  node->block()->accept(this);
+}
+
 void SymbolTableBuilder::print_symbol_table() const {
   symbol_table_.print();
 }

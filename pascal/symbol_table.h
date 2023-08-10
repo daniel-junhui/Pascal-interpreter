@@ -35,6 +35,7 @@ class SymbolTableBuilder : public Visitor {
   void visit(const Block*) override;
   void visit(const VariableDeclaration*) override;
   ValueAST::ValueType visit(const Type*) override;
+  void visit(const ProcedureDeclaration*) override;
 
   void print_symbol_table() const;
 };

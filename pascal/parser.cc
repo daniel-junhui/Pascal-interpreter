@@ -40,14 +40,18 @@ std::unique_ptr<Program> Parser::program() {
 }
 
 std::unique_ptr<Block> Parser::block() {
-  auto declarations = this->declarations();
+  auto [declarations, procedures] = this->declarations();
   auto compound_statement = this->compound_statement();
-  return std::make_unique<Block>(std::move(declarations),
+  return std::make_unique<Block>(std::move(declarations), std::move(procedures),
                                  std::move(compound_statement));
 }
 
-std::vector<std::unique_ptr<VariableDeclaration>> Parser::declarations() {
+std::pair<std::vector<std::unique_ptr<VariableDeclaration>>,
+          std::vector<std::unique_ptr<ProcedureDeclaration>>>
+
+Parser::declarations() {
   std::vector<std::unique_ptr<VariableDeclaration>> declarations;
+  std::vector<std::unique_ptr<ProcedureDeclaration>> procedures;
   if (current_token_.type() == Token::Type::VAR) {
     eat(Token::Type::VAR);
 
@@ -58,7 +62,18 @@ std::vector<std::unique_ptr<VariableDeclaration>> Parser::declarations() {
       eat(Token::Type::SEMI);
     }
   }
-  return declarations;
+
+  while (current_token_.type() == Token::Type::PROCEDURE) {
+    eat(Token::Type::PROCEDURE);
+    auto proc_name = variable();
+    eat(Token::Type::SEMI);
+    auto block_node = block();
+    auto proc_decl = std::make_unique<ProcedureDeclaration>(
+        std::move(proc_name->value()), std::move(block_node));
+    procedures.push_back(std::move(proc_decl));
+    eat(Token::Type::SEMI);
+  }
+  return {std::move(declarations), std::move(procedures)};
 }
 
 std::unique_ptr<VariableDeclaration> Parser::variable_declaration() {
