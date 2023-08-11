@@ -3,98 +3,59 @@
 
 namespace Pascal {
 
-bool SymbolTable::is_defined(const std::string& name) const {
-  return symbols_.find(name) != symbols_.end();
-}
-
-void SymbolTable::define(const std::string& name, ValueAST::ValueType type) {
-  if (is_defined(name)) {
-    throw std::runtime_error("variable \"" + name + "\" already defined!");
+bool Scope::define(const std::string& name, ValueAST::ValueType type) {
+  if (symbols_.find(name) != symbols_.end()) {
+    return false;
   }
   symbols_[name] = type;
+  return true;
 }
 
-ValueAST::ValueType SymbolTable::get_type(const std::string& name) const {
-  if (!is_defined(name)) {
-    throw std::runtime_error("variable \"" + name + "\" not defined!");
+ValueAST::ValueType Scope::get_type(const std::string& name) const {
+  if (symbols_.find(name) == symbols_.end()) {
+    if (enclosing_scope_) {
+      return enclosing_scope_->get_type(name);
+    }
+    throw std::runtime_error("Undefined variable " + name);
   }
   return symbols_.at(name);
 }
 
-void SymbolTable::print() const {
-  for (const auto& [name, type] : symbols_) {
-    spdlog::info("{}: {}", name, ValueAST::type_to_string(type));
+bool Scope::is_defined(const std::string& name) const {
+  if (symbols_.find(name) == symbols_.end()) {
+    return false;
+  }
+  return true;
+}
+
+const Scope* Scope::enclosing_scope() const {
+  if (enclosing_scope_) {
+    return enclosing_scope_.get();
+  }
+  return nullptr;
+}
+
+SymbolTable::SymbolTable() : current_scope_(std::make_shared<Scope>()) {}
+
+void SymbolTable::define(const std::string& name, ValueAST::ValueType type) {
+  if (!current_scope_->define(name, type)) {
+    error("Variable " + name + " already defined");
   }
 }
 
-ValueAST::Value SymbolTableBuilder::visit(const BinaryOperation* node) {
-  node->left()->accept(this);
-  node->right()->accept(this);
-  return {};
+ValueAST::ValueType SymbolTable::get_type(const std::string& name) const {
+  return current_scope_->get_type(name);
 }
 
-ValueAST::Value SymbolTableBuilder::visit(const UnaryOperation* node) {
-  node->expr()->accept(this);
-  return {};
+bool SymbolTable::is_defined(const std::string& name) const {
+  return current_scope_->is_defined(name);
 }
 
-ValueAST::Value SymbolTableBuilder::visit(const Number* node) {
-  return {};
+void SymbolTable::error(const std::string& msg) const {
+  spdlog::error("SymbolTable error: {}", msg);
+  throw std::runtime_error(msg);
 }
 
-ValueAST::Value SymbolTableBuilder::visit(const Variable* node) {
-  const auto var_name = node->value();
 
-  if (!symbol_table_.is_defined(var_name)) {
-    throw std::runtime_error("variable \"" + var_name + "\" not defined!");
-  }
-
-  return {};
-}
-
-void SymbolTableBuilder::visit(const Compound* node) {
-  for (const auto& child : node->children()) {
-    child->accept(this);
-  }
-}
-
-void SymbolTableBuilder::visit(const Assign* node) {
-  const auto left = node->left();
-  const auto var_name = left->value();
-  if (!symbol_table_.is_defined(var_name)) {
-    throw std::runtime_error("variable \"" + var_name + "\" not defined!");
-  }
-  node->right()->accept(this);
-}
-
-void SymbolTableBuilder::visit(const Program* node) {
-  node->block()->accept(this);
-}
-
-void SymbolTableBuilder::visit(const Block* node) {
-  for (const auto& declaration : node->declarations()) {
-    declaration->accept(this);
-  }
-  node->compound_statement()->accept(this);
-}
-
-void SymbolTableBuilder::visit(const VariableDeclaration* node) {
-  const auto type = node->type()->value();
-  for (const auto& var : node->variables()) {
-    symbol_table_.define(var->value(), type);
-  }
-}
-
-ValueAST::ValueType SymbolTableBuilder::visit(const Type* type) {
-  return {};
-}
-
-void SymbolTableBuilder::visit(const ProcedureDeclaration* node) {
-  node->block()->accept(this);
-}
-
-void SymbolTableBuilder::print_symbol_table() const {
-  symbol_table_.print();
-}
 
 }  // namespace Pascal

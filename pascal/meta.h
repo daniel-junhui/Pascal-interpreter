@@ -94,6 +94,8 @@ class Token {
         return "INTEGER_CONST";
       case Type::REAL_CONST:
         return "REAL_CONST";
+      case Type::PROCEDURE:
+        return "PROCEDURE";
     }
     throw std::runtime_error("Unknown token type");
   }
@@ -162,6 +164,9 @@ class Token {
         return "Token(INTEGER_TYPE)";
       case Type::REAL_TYPE:
         return "Token(REAL_TYPE)";
+      
+      case Type::PROCEDURE:
+        return "Token(PROCEDURE)";
     }
     throw std::runtime_error("Unknown token type");
   }

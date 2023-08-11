@@ -67,22 +67,27 @@ class Visitor {
 
 class Block : public NonValueAST {
  private:
-  std::vector<std::unique_ptr<VariableDeclaration>> declarations_;
-  std::vector<std::unique_ptr<ProcedureDeclaration>> procedures_;
+  std::vector<std::unique_ptr<VariableDeclaration>> var_declarations_;
+  std::vector<std::unique_ptr<ProcedureDeclaration>> procedures_declarations_;
   std::unique_ptr<Compound> compound_statement_;
 
  public:
-  explicit Block(std::vector<std::unique_ptr<VariableDeclaration>> declarations,
-                 std::vector<std::unique_ptr<ProcedureDeclaration>> procedures,
+  explicit Block(std::vector<std::unique_ptr<VariableDeclaration>> var_declarations,
+                 std::vector<std::unique_ptr<ProcedureDeclaration>> procedure_declarations,
                  std::unique_ptr<Compound> compound_statement)
-      : declarations_(std::move(declarations)),
+      : var_declarations_(std::move(var_declarations)), procedures_declarations_(std::move(procedure_declarations)),
         compound_statement_(std::move(compound_statement)) {}
 
   void accept(Visitor* visitor) const override { visitor->visit(this); }
 
-  const std::vector<std::unique_ptr<VariableDeclaration>>& declarations()
+  const std::vector<std::unique_ptr<VariableDeclaration>>& var_declarations()
       const {
-    return declarations_;
+    return var_declarations_;
+  }
+
+  const std::vector<std::unique_ptr<ProcedureDeclaration>>& procedures_declarations()
+      const {
+    return procedures_declarations_;
   }
 
   Compound* compound_statement() const { return compound_statement_.get(); }

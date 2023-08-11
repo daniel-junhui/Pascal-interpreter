@@ -116,9 +116,20 @@ class ReadVisitor : public Pascal::Visitor {
   void visit(const Pascal::Block* block) override {
     pre_print_depth() << "Block\n";
     pre_print_depth() << "declarations: \n";
+
+    pre_print_depth() << block->var_declarations().size() << " variable_declarations: \n";
+
     ++depth_;
-    for (const auto& declaration : block->declarations()) {
+    for (const auto& declaration : block->var_declarations()) {
       declaration->accept(this);
+    }
+    --depth_;
+
+    pre_print_depth() << block->procedures_declarations().size() << " procedure_declarations: \n";
+    ++depth_;
+    
+    for (const auto& procedure_decl : block->procedures_declarations()) {
+      procedure_decl->accept(this);
     }
     --depth_;
 

@@ -42,6 +42,7 @@ std::unique_ptr<Program> Parser::program() {
 std::unique_ptr<Block> Parser::block() {
   auto [declarations, procedures] = this->declarations();
   auto compound_statement = this->compound_statement();
+  
   return std::make_unique<Block>(std::move(declarations), std::move(procedures),
                                  std::move(compound_statement));
 }
