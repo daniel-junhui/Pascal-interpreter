@@ -5,4 +5,4 @@ env = Environment(CXXFLAGS = '-std=c++2a')
 Export('env')
 
 SConscript('calculator/SConscript', variant_dir='build/calculator')
-SConscript('pascal/SConscript', variant_dir='build/pascal')
+# SConscript('pascal/SConscript', variant_dir='build/pascal')
