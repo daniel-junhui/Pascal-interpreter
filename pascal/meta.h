@@ -164,7 +164,6 @@ class Token {
         return "Token(INTEGER_TYPE)";
       case Type::REAL_TYPE:
         return "Token(REAL_TYPE)";
-      
       case Type::PROCEDURE:
         return "Token(PROCEDURE)";
     }

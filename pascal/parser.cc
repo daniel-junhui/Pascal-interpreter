@@ -42,7 +42,6 @@ std::unique_ptr<Program> Parser::program() {
 std::unique_ptr<Block> Parser::block() {
   auto [declarations, procedures] = this->declarations();
   auto compound_statement = this->compound_statement();
-  
   return std::make_unique<Block>(std::move(declarations), std::move(procedures),
                                  std::move(compound_statement));
 }
@@ -56,7 +55,8 @@ Parser::declarations() {
   if (current_token_.type() == Token::Type::VAR) {
     eat(Token::Type::VAR);
 
-    // here is a tricky part, we need to handle multiple variables and they can be zero or more.
+    // here is a tricky part, we need to handle multiple
+    // variables and they can be zero or more.
     while (current_token_.type() == Token::Type::ID) {
       auto var_decl = variable_declaration();
       declarations.push_back(std::move(var_decl));
@@ -78,10 +78,10 @@ Parser::declarations() {
 }
 
 std::unique_ptr<VariableDeclaration> Parser::variable_declaration() {
-
   auto var_nodes = std::vector<std::unique_ptr<Variable>>();
 
-  // There may be multiple variables declared in one declaration, but must have at least one.
+  // There may be multiple variables declared
+  // in one declaration, but must have at least one.
   auto first_var = variable();
 
   var_nodes.push_back(std::move(first_var));

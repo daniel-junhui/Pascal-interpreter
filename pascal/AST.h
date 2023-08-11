@@ -72,10 +72,12 @@ class Block : public NonValueAST {
   std::unique_ptr<Compound> compound_statement_;
 
  public:
-  explicit Block(std::vector<std::unique_ptr<VariableDeclaration>> var_declarations,
-                 std::vector<std::unique_ptr<ProcedureDeclaration>> procedure_declarations,
-                 std::unique_ptr<Compound> compound_statement)
-      : var_declarations_(std::move(var_declarations)), procedures_declarations_(std::move(procedure_declarations)),
+  explicit Block(
+      std::vector<std::unique_ptr<VariableDeclaration>> var_declarations,
+      std::vector<std::unique_ptr<ProcedureDeclaration>> procedure_declarations,
+      std::unique_ptr<Compound> compound_statement)
+      : var_declarations_(std::move(var_declarations)),
+        procedures_declarations_(std::move(procedure_declarations)),
         compound_statement_(std::move(compound_statement)) {}
 
   void accept(Visitor* visitor) const override { visitor->visit(this); }
@@ -85,8 +87,8 @@ class Block : public NonValueAST {
     return var_declarations_;
   }
 
-  const std::vector<std::unique_ptr<ProcedureDeclaration>>& procedures_declarations()
-      const {
+  const std::vector<std::unique_ptr<ProcedureDeclaration>>&
+  procedures_declarations() const {
     return procedures_declarations_;
   }
 

@@ -27,7 +27,7 @@ ValueAST::ValueType Interpreter::visit(const Type* type) {
 
 void Interpreter::visit(const VariableDeclaration* var_decl) {
   const auto type = var_decl->type()->accept(this);
-  const auto & vars = var_decl->variables();
+  const auto& vars = var_decl->variables();
 
   return;
 }
@@ -95,7 +95,6 @@ ValueAST::Value Interpreter::visit(const BinaryOperation* node) {
     case BinaryOperator::INTEGER_DIV:
       return binaryOperateValueAST(
           node->left(), node->right(), [](auto&& left, auto&& right) {
-            //cast to int
             return static_cast<int>(left) / static_cast<int>(right);
           });
     case BinaryOperator::REAL_DIV:

@@ -1,3 +1,5 @@
+// Copyright 2023 Zhu Junhui
+
 #include "symbol_table.h"
 #include <spdlog/spdlog.h>
 
