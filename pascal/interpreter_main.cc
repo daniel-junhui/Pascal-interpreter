@@ -3,9 +3,10 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include "interpreter.h"
+// #include "interpreter.h"
 #include "io.h"
 #include "parser.h"
+#include "semantic_analyzer.h"
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
@@ -18,10 +19,8 @@ int main(int argc, char* argv[]) {
   Pascal::Parser parser(text);
   auto tree = parser.parse();
 
-  Pascal::Interpreter interpreter;
-  tree->accept(&interpreter);
-
-  interpreter.print_global_scope();
+  Pascal::SemanticAnalyzer analyzer;
+  tree->accept(&analyzer);
 
   return 0;
 }

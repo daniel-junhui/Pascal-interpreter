@@ -1,6 +1,11 @@
 # use env from parent SConstruct
 Import('env')
 
+# logger
+# env.Object('logger.o', 'logger.cc')
+env.Object('log_test.o', 'log_test.cc')
+env.Program('log_test', ['log_test.o'])
+
 # lexer
 env.Object('lexer.o', 'lexer.cc')
 env.Object('lexer_test.o', 'lexer_test.cc')
@@ -11,15 +16,19 @@ env.Object('parser.o', 'parser.cc')
 env.Object('parser_test.o', 'parser_test.cc')
 env.Program('parser_test', ['parser_test.o', 'lexer.o', 'parser.o'])
 
+
+# semantic analyzer
+env.Object('semantic_analyzer.o', 'semantic_analyzer.cc')
+
 # symbol table
 env.Object('symbol_table.o', 'symbol_table.cc')
-env.Object('symbol_table_test.o', 'symbol_table_test.cc')
-env.Program('symbol_table_test', ['symbol_table_test.o', 'symbol_table.o', 'parser.o', 'lexer.o'])
+# env.Object('symbol_table_test.o', 'symbol_table_test.cc')
+# env.Program('symbol_table_test', ['symbol_table_test.o', 'symbol_table.o', 'parser.o', 'lexer.o'])
 
 # # interpreter
 # env.Object('interpreter.o', 'interpreter.cc')
-# env.Object('main.o', 'interpreter_main.cc')
-# env.Program('interpreter', ['main.o', 'interpreter.o', 'lexer.o', 'parser.o'])
+env.Object('main.o', 'interpreter_main.cc')
+env.Program('interpreter', ['main.o', 'semantic_analyzer.o', 'lexer.o', 'parser.o', 'symbol_table.o'])
 
 
 

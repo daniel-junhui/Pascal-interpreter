@@ -1,7 +1,6 @@
 // Copyright 2023 Zhu Junhui
 
 #include "symbol_table.h"
-#include <spdlog/spdlog.h>
 
 namespace Pascal {
 
@@ -13,51 +12,75 @@ bool Scope::define(const std::string& name, ValueAST::ValueType type) {
   return true;
 }
 
-ValueAST::ValueType Scope::get_type(const std::string& name) const {
-  if (symbols_.find(name) == symbols_.end()) {
-    if (enclosing_scope_) {
-      return enclosing_scope_->get_type(name);
-    }
-    throw std::runtime_error("Undefined variable " + name);
+Scope::Scope(const std::string& block_name,
+             std::shared_ptr<Scope> enclosing_scope)
+    : block_name_(block_name), enclosing_scope_(enclosing_scope) {}
+
+std::optional<ValueAST::ValueType> Scope::get_type(
+    const std::string& name) const {
+  if (auto it = symbols_.find(name); it != symbols_.end()) {
+    return it->second;
   }
-  return symbols_.at(name);
+  return std::nullopt;
 }
 
 bool Scope::is_defined(const std::string& name) const {
-  if (symbols_.find(name) == symbols_.end()) {
+  if (auto it = symbols_.find(name); it != symbols_.end()) {
+    return true;
+  }
+  return false;
+}
+
+std::shared_ptr<Scope> Scope::enclosing_scope() const {
+  return enclosing_scope_;
+}
+
+SymbolTable::SymbolTable() {
+  current_scope_ = nullptr;
+}
+
+bool SymbolTable::define(const std::string& name, ValueAST::ValueType type) {
+  if (current_scope_ == nullptr) {
     return false;
   }
-  return true;
+  return current_scope_->define(name, type);
 }
 
-const Scope* Scope::enclosing_scope() const {
-  if (enclosing_scope_) {
-    return enclosing_scope_.get();
+std::optional<ValueAST::ValueType> SymbolTable::get_type(
+    const std::string& name) const {
+  if (current_scope_ == nullptr) {
+    return std::nullopt;
   }
-  return nullptr;
-}
-
-SymbolTable::SymbolTable() : current_scope_(std::make_shared<Scope>()) {}
-
-void SymbolTable::define(const std::string& name, ValueAST::ValueType type) {
-  if (!current_scope_->define(name, type)) {
-    error("Variable " + name + " already defined");
-  }
-}
-
-ValueAST::ValueType SymbolTable::get_type(const std::string& name) const {
   return current_scope_->get_type(name);
 }
 
-bool SymbolTable::is_defined(const std::string& name) const {
-  return current_scope_->is_defined(name);
+bool SymbolTable::is_defined(const std::string& name, bool local) const {
+  if (current_scope_ == nullptr) {
+    return false;
+  }
+  if (local) {
+    return current_scope_->is_defined(name);
+  }
+  const Scope* scope = current_scope_.get();
+  while (scope != nullptr) {
+    if (scope->is_defined(name)) {
+      return true;
+    }
+    scope = scope->enclosing_scope().get();
+  }
+  return false;
 }
 
-void SymbolTable::error(const std::string& msg) const {
-  spdlog::error("SymbolTable error: {}", msg);
-  throw std::runtime_error(msg);
+void SymbolTable::enter_scope(const std::string& name) {
+  current_scope_ = std::make_shared<Scope>(name, current_scope_);
 }
 
+void SymbolTable::exit_scope() {
+  if (current_scope_ == nullptr) {
+    return;
+  }
 
+  current_scope_ = current_scope_->enclosing_scope();
+}
 
 }  // namespace Pascal

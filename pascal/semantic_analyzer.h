@@ -3,10 +3,15 @@
 #pragma once
 
 #include "AST.h"
+#include "symbol_table.h"
 
 namespace Pascal {
 
 class SemanticAnalyzer : public Visitor {
+ private:
+  SymbolTable symbol_table_;
+  void error(const std::string& msg);
+
  public:
   void analyze(const Program*);
 

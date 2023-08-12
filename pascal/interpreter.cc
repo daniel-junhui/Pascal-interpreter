@@ -2,8 +2,6 @@
 
 #include "interpreter.h"
 #include <string>
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
 
 namespace Pascal {
 void Interpreter::error(const std::string& msg) {

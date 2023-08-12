@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 #include "io.h"
-#include "spdlog/spdlog.h"
 
 class ReadVisitor : public Pascal::Visitor {
   using Value = Pascal::ValueAST::Value;
@@ -172,7 +171,6 @@ int main(int argc, char* argv[]) {
 
   Pascal::Parser parser(text);
   auto tree = parser.parse();
-  spdlog::set_level(spdlog::level::debug);
   ReadVisitor visitor;
   tree->accept(&visitor);
 
