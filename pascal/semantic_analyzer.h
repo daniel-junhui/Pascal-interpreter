@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include <iostream>
+#include <string>
+#include <utility>
 #include "AST.h"
 #include "symbol_table.h"
 
@@ -9,16 +12,20 @@ namespace Pascal {
 
 class SemanticAnalyzer : public Checker {
  private:
-  SymbolTable symbol_table_;
+  T::SymbolTable symbol_table_;
   void error(const std::string& msg);
+
+  // debug usage
+  int depth_ = 0;
+  std::ostream& indent() const;
 
  public:
   void analyze(Program*);
 
-  ValueAST* check(BinaryOperation*) override;
-  ValueAST* check(UnaryOperation*) override;
-  ValueAST* check(Number*) override;
-  ValueAST* check(Variable*) override;
+  std::pair<ValueAST*, ValueAST::ValueType> check(BinaryOperation*) override;
+  std::pair<ValueAST*, ValueAST::ValueType> check(UnaryOperation*) override;
+  std::pair<ValueAST*, ValueAST::ValueType> check(Number*) override;
+  std::pair<ValueAST*, ValueAST::ValueType> check(Variable*) override;
   void check(Compound*) override;
   void check(Assign*) override;
   void check(Program*) override;

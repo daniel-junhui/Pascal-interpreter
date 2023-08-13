@@ -159,13 +159,13 @@ class Assign : public NonValueAST {
 
   ValueAST* right() const { return right_.get(); }
 
+  ValueAST* right_release() { return right_.release(); }
+
   void accept(NonValueASTVisitor* visitor) const override {
     visitor->visit(this);
   }
 
   void accept(NonValueASTChecker* checker) override { checker->check(this); }
-
-  void set_left(Variable* left) { left_.reset(left); }
 
   void set_right(ValueAST* right) { right_.reset(right); }
 };

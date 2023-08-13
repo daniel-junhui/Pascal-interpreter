@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
   auto tree = parser.parse();
 
   Pascal::SemanticAnalyzer analyzer;
-  tree->accept(&analyzer);
+  analyzer.analyze(tree.get());
 
   return 0;
 }

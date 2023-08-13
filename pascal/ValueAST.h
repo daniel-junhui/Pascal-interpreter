@@ -31,8 +31,11 @@ class ValueAST {
     }
   }
   virtual Value accept(ValueASTVisitor* visitor) const = 0;
-  virtual ValueAST* accept(ValueASTChecker* checker) = 0;
+  virtual std::pair<ValueAST*, ValueAST::ValueType> accept(
+      ValueASTChecker* checker) = 0;
   virtual bool type_checked() const { return false; }
+
+  virtual std::pair<ValueAST*, ValueType> wrap_with_type(ValueType) = 0;
 };
 
 template <class T>
@@ -42,8 +45,8 @@ requires std::is_base_of_v<ValueAST, T> class TypeChecked : public T {
 
  public:
   // use T's constructor
-  explicit TypeChecked(ValueAST::ValueType type, T* value)
-      : T(value), type_(type) {}
+  explicit TypeChecked(ValueAST::ValueType type, T&& other)
+      : T(std::forward<T>(other)), type_(type) {}
 
   ValueAST::ValueType type() const { return type_; }
 
@@ -83,10 +86,10 @@ class ValueASTVisitor {
 
 class ValueASTChecker {
  public:
-  virtual ValueAST* check(BinaryOperation*) = 0;
-  virtual ValueAST* check(UnaryOperation*) = 0;
-  virtual ValueAST* check(Number*) = 0;
-  virtual ValueAST* check(Variable*) = 0;
+  virtual std::pair<ValueAST*, ValueAST::ValueType> check(BinaryOperation*) = 0;
+  virtual std::pair<ValueAST*, ValueAST::ValueType> check(UnaryOperation*) = 0;
+  virtual std::pair<ValueAST*, ValueAST::ValueType> check(Number*) = 0;
+  virtual std::pair<ValueAST*, ValueAST::ValueType> check(Variable*) = 0;
   virtual ValueAST::ValueType check(Type*) = 0;
 };
 
@@ -140,7 +143,7 @@ class Variable : public ValueAST {
     assert(token.type() == Token::Type::ID);
   }
 
-  explicit Variable(Variable* variable) : value_(variable->value()) {}
+  explicit Variable(Variable&& other) : value_(std::move(other.value_)) {}
 
   const std::string& value() const { return value_; }
 
@@ -148,8 +151,14 @@ class Variable : public ValueAST {
     return visitor->visit(this);
   }
 
-  ValueAST* accept(ValueASTChecker* checker) override {
+  std::pair<ValueAST*, ValueAST::ValueType> accept(
+      ValueASTChecker* checker) override {
     return checker->check(this);
+  }
+
+  std::pair<ValueAST*, ValueType> wrap_with_type(
+      ValueAST::ValueType type) override {
+    return {new TypeChecked(type, std::move(*this)), type};
   }
 };
 
@@ -174,10 +183,8 @@ class Number : public ValueAST {
     }
   }
 
-  explicit Number(Number* number) {
-    type_ = number->type();
-    value_ = number->value();
-  }
+  explicit Number(Number&& number)
+      : value_(std::move(number.value_)), type_(number.type_) {}
 
   std::variant<int, double> value() const { return value_; }
 
@@ -187,8 +194,14 @@ class Number : public ValueAST {
     return visitor->visit(this);
   }
 
-  ValueAST* accept(ValueASTChecker* checker) override {
+  std::pair<ValueAST*, ValueAST::ValueType> accept(
+      ValueASTChecker* checker) override {
     return checker->check(this);
+  }
+
+  std::pair<ValueAST*, ValueType> wrap_with_type(
+      ValueAST::ValueType type) override {
+    return {new TypeChecked(type, std::move(*this)), type};
   }
 };
 
@@ -232,15 +245,18 @@ class BinaryOperation : public ValueAST {
     }
   }
 
-  explicit BinaryOperation(BinaryOperation* binary_operation) {
-    left_.reset(binary_operation->left());
-    right_.reset(binary_operation->right());
-    op_ = binary_operation->op();
-  }
+  explicit BinaryOperation(BinaryOperation&& other)
+      : left_(std::move(other.left_)),
+        right_(std::move(other.right_)),
+        op_(other.op_) {}
 
   ValueAST* left() const { return left_.get(); }
 
   ValueAST* right() const { return right_.get(); }
+
+  ValueAST* left_release() { return left_.release(); }
+
+  ValueAST* right_release() { return right_.release(); }
 
   Operator op() const { return op_; }
 
@@ -248,13 +264,19 @@ class BinaryOperation : public ValueAST {
     return visitor->visit(this);
   }
 
-  ValueAST* accept(ValueASTChecker* checker) override {
+  std::pair<ValueAST*, ValueAST::ValueType> accept(
+      ValueASTChecker* checker) override {
     return checker->check(this);
   }
 
   void set_left(ValueAST* left) { left_.reset(left); }
 
   void set_right(ValueAST* right) { right_.reset(right); }
+
+  std::pair<ValueAST*, ValueType> wrap_with_type(
+      ValueAST::ValueType type) override {
+    return {new TypeChecked(type, std::move(*this)), type};
+  }
 };
 
 class UnaryOperation : public ValueAST {
@@ -283,10 +305,12 @@ class UnaryOperation : public ValueAST {
     }
   }
 
-  explicit UnaryOperation(UnaryOperation* other)
-      : expr_(std::move(other->expr_)), op_(other->op_) {}
+  explicit UnaryOperation(UnaryOperation&& other)
+      : expr_(std::move(other.expr_)), op_(other.op_) {}
 
   ValueAST* expr() const { return expr_.get(); }
+
+  ValueAST* expr_release() { return expr_.release(); }
 
   Operator op() const { return op_; }
 
@@ -294,11 +318,17 @@ class UnaryOperation : public ValueAST {
     return visitor->visit(this);
   }
 
-  ValueAST* accept(ValueASTChecker* checker) override {
+  std::pair<ValueAST*, ValueAST::ValueType> accept(
+      ValueASTChecker* checker) override {
     return checker->check(this);
   }
 
   void set_expr(ValueAST* expr) { expr_.reset(expr); }
+
+  std::pair<ValueAST*, ValueType> wrap_with_type(
+      ValueAST::ValueType type) override {
+    return {new TypeChecked(type, std::move(*this)), type};
+  }
 };
 
 }  // namespace Pascal

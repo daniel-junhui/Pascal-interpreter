@@ -12,6 +12,8 @@
 
 namespace Pascal {
 
+constexpr bool DEBUG = true;
+
 class Token {
  public:
   enum class Type {

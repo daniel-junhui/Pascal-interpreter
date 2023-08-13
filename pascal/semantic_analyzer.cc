@@ -1,6 +1,8 @@
 // Copyright 2023 Zhu Junhui
 
 #include "semantic_analyzer.h"
+#include <string>
+#include <utility>
 
 namespace Pascal {
 
@@ -8,24 +10,52 @@ void SemanticAnalyzer::error(const std::string& msg) {
   throw std::runtime_error(msg);
 }
 
+std::ostream& SemanticAnalyzer::indent() const {
+  for (int i = 0; i < depth_; ++i) {
+    std::cout << "  ";
+  }
+  return std::cout;
+}
+
 void SemanticAnalyzer::analyze(Program* program) {
+  if (DEBUG) {
+    indent() << "Semantic analysis starts" << std::endl;
+  }
   program->accept(this);
 }
 
 void SemanticAnalyzer::check(Program* program) {
+  if (DEBUG) {
+    indent() << "check program" << std::endl;
+  }
   symbol_table_.enter_scope(program->name());
+  depth_++;
   program->block()->accept(this);
   symbol_table_.exit_scope();
+  depth_--;
 }
 
 void SemanticAnalyzer::check(Block* block) {
+  if (DEBUG) {
+    indent() << "check block" << std::endl;
+  }
+
+  depth_++;
   for (const auto& declaration : block->var_declarations()) {
     declaration->accept(this);
   }
+
+  depth_--;
+
+  depth_++;
   for (const auto& declaration : block->procedures_declarations()) {
     declaration->accept(this);
   }
+  depth_--;
+
+  depth_++;
   block->compound_statement()->accept(this);
+  depth_--;
 }
 
 void SemanticAnalyzer::check(ProcedureDeclaration* procedure_decl) {
@@ -39,113 +69,147 @@ ValueAST::ValueType SemanticAnalyzer::check(Type* type) {
 }
 
 void SemanticAnalyzer::check(VariableDeclaration* var_decl) {
+  if (DEBUG) {
+    indent() << "check variable declaration" << std::endl;
+  }
+
+  depth_++;
   const auto type = var_decl->type()->accept(this);
+
+  if (DEBUG) {
+    indent() << "type: " << ValueAST::type_to_string(type) << std::endl;
+  }
   const auto& var_names = var_decl->variables();
+
+  if (DEBUG) {
+    indent() << "variables: ";
+  }
   for (const auto& var : var_names) {
+    if (DEBUG) {
+      std::cout << var->value() << ", ";
+    }
     if (!symbol_table_.define(var->value(), type)) {
       error("variable " + var->value() + " has been declared!");
     }
   }
+  std::cout << "\n";
+
+  depth_--;
 }
 
 void SemanticAnalyzer::check(Compound* compound) {
+  if (DEBUG) {
+    indent() << "check compound" << std::endl;
+  }
+  depth_++;
   for (const auto& child : compound->children()) {
     child->accept(this);
   }
+  depth_--;
 }
 
 void SemanticAnalyzer::check(Assign* assign) {
-  ValueAST::ValueType left_type;
-  ValueAST::ValueType right_type;
-
-  // for left
-  if (const auto type_checked_left =
-          dynamic_cast<TypeChecked<Variable>*>(assign->left()->accept(this));
-      type_checked_left != nullptr) {
-    assert(type_checked_left->type_checked());
-    assign->set_left(type_checked_left);
-    left_type = type_checked_left->type();
-  } else {
-    error("type of left expression is not checked!");
-    return;
+  if (DEBUG) {
+    indent() << "check assign" << std::endl;
   }
 
-  // for right
-  if (const auto type_checked_right =
-          dynamic_cast<TypeChecked<ValueAST>*>(assign->right()->accept(this));
-      type_checked_right != nullptr) {
-    assert(type_checked_right->type_checked());
-    assign->set_right(type_checked_right);
-    right_type = type_checked_right->type();
-  } else {
-    error("type of right expression is not checked!");
-    return;
+  depth_++;
+
+  const auto left_var = assign->left();
+  const auto right_expr = assign->right_release();
+
+  const auto [right_typed, right_type] = right_expr->accept(this);
+
+  delete right_expr;
+
+  assign->set_right(right_typed);
+
+  assert(right_typed->type_checked());
+
+  // check whether defined
+  if (!symbol_table_.is_defined(left_var->value(), true)) {
+    error("variable " + left_var->value() + " has not been declared!");
   }
+
+  // check whether type is equal
+  if (symbol_table_.get_type(left_var->value()).value() != right_type) {
+    error("type of left expression is not equal to type of right expression!");
+  }
+
+  depth_--;
+}
+
+std::pair<ValueAST*, ValueAST::ValueType> SemanticAnalyzer::check(
+    Variable* variable) {
+
+  if (DEBUG) {
+    indent() << "check variable" << std::endl;
+  }
+
+  depth_++;
+  const auto var_name = variable->value();
+
+  if (DEBUG) {
+    indent() << "variable name: " << var_name << std::endl;
+  }
+  if (!symbol_table_.is_defined(var_name, true)) {
+    error("variable " + var_name + " has not been declared!");
+  }
+
+  depth_--;
+  return variable->wrap_with_type(symbol_table_.get_type(var_name).value());
+}
+
+std::pair<ValueAST*, ValueAST::ValueType> SemanticAnalyzer::check(
+    BinaryOperation* op) {
+  const auto left = op->left_release();
+  const auto right = op->right_release();
+
+  const auto [left_typed, left_type] = left->accept(this);
+  const auto [right_typed, right_type] = right->accept(this);
+
+  delete left;
+  delete right;
+
+  op->set_left(left_typed);
+  op->set_right(right_typed);
+
+  assert(left_typed->type_checked());
+  assert(right_typed->type_checked());
 
   if (left_type != right_type) {
     error("type of left expression is not equal to type of right expression!");
   }
+
+  return op->wrap_with_type(left_type);
 }
 
-ValueAST* SemanticAnalyzer::check(Variable* variable) {
-  const auto var_name = variable->value();
-  if (!symbol_table_.is_defined(var_name, true)) {
-    error("variable " + var_name + " has not been declared!");
-  }
-  return new TypeChecked<Variable>(symbol_table_.get_type(var_name).value(),
-                                   variable);
+std::pair<ValueAST*, ValueAST::ValueType> SemanticAnalyzer::check(
+    UnaryOperation* op) {
+  const auto expr = op->expr_release();
+  const auto [expr_typed, expr_type] = expr->accept(this);
+  delete expr;
+
+  op->set_expr(expr_typed);
+
+  assert(expr_typed->type_checked());
+
+  return op->wrap_with_type(expr_type);
 }
 
-ValueAST* SemanticAnalyzer::check(BinaryOperation* op) {
-  ValueAST::ValueType left_type;
-  ValueAST::ValueType right_type;
-  // for left
-  if (const auto type_checked_left =
-          dynamic_cast<TypeChecked<ValueAST>*>(op->left()->accept(this));
-      type_checked_left != nullptr) {
-    assert(type_checked_left->type_checked());
-    op->set_left(type_checked_left);
-    left_type = type_checked_left->type();
-  } else {
-    error("type of left expression is not checked!");
-    return nullptr;
-  }
+std::pair<ValueAST*, ValueAST::ValueType> SemanticAnalyzer::check(
+    Number* number) {
 
-  // for right
-  if (const auto type_checked_right =
-          dynamic_cast<TypeChecked<ValueAST>*>(op->right()->accept(this));
-      type_checked_right != nullptr) {
-    assert(type_checked_right->type_checked());
-    op->set_right(type_checked_right);
-    right_type = type_checked_right->type();
-  } else {
-    error("type of right expression is not checked!");
-    return nullptr;
+  if (DEBUG) {
+    indent() << "check number" << std::endl;
   }
-
-  if (left_type != right_type) {
-    error("type of left and right expression is not same!");
-  }
-  return new TypeChecked<BinaryOperation>(left_type, op);
-}
-
-ValueAST* SemanticAnalyzer::check(UnaryOperation* op) {
-  if (const auto type_checked_expr =
-          dynamic_cast<TypeChecked<ValueAST>*>(op->expr()->accept(this));
-      type_checked_expr != nullptr) {
-    assert(type_checked_expr->type_checked());
-    op->set_expr(type_checked_expr);
-    return new TypeChecked<UnaryOperation>(type_checked_expr->type(), op);
-  } else {
-    error("type of expression is not checked!");
-    return nullptr;
-  }
-}
-
-ValueAST* SemanticAnalyzer::check(Number* number) {
+  depth_++;
   const auto type = number->type();
-  using TypeCheckedNumber = TypeChecked<Number>;
-  return new TypeCheckedNumber(type, number);
+  if (DEBUG) {
+    indent() << "type: " << ValueAST::type_to_string(type) << std::endl;
+  }
+  depth_--;
+  return number->wrap_with_type(type);
 }
 
 }  // namespace Pascal
