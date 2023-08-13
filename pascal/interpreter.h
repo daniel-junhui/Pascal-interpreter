@@ -5,12 +5,13 @@
 #include <string>
 #include <unordered_map>
 #include "AST.h"
+#include "symbol_table.h"
 
 namespace Pascal {
 
 class Interpreter : public Visitor {
  private:
-  std::unordered_map<std::string, ValueAST::Value> global_scope_;
+  V::SymbolTable symbol_table_;
   void error(const std::string& msg);
 
   template <class F>

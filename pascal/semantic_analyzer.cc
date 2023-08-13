@@ -1,8 +1,6 @@
 // Copyright 2023 Zhu Junhui
 
 #include "semantic_analyzer.h"
-#include <string>
-#include <utility>
 
 namespace Pascal {
 
@@ -177,8 +175,22 @@ std::pair<ValueAST*, ValueAST::ValueType> SemanticAnalyzer::check(
   assert(left_typed->type_checked());
   assert(right_typed->type_checked());
 
-  if (left_type != right_type) {
-    error("type of left expression is not equal to type of right expression!");
+  if (op->op() != BinaryOperation::Operator::INTEGER_DIV &&
+      op->op() != BinaryOperation::Operator::REAL_DIV) {
+    if (left_type != right_type) {
+      error(
+          "type of left expression is not equal to type of right expression!");
+    }
+  } else if (op->op() == BinaryOperation::Operator::INTEGER_DIV) {
+    if (left_type != ValueAST::ValueType::INTEGER ||
+        right_type != ValueAST::ValueType::INTEGER) {
+      error("type of left expression or right expression is not integer!");
+    }
+  } else if (op->op() == BinaryOperation::Operator::REAL_DIV) {
+    if (left_type != ValueAST::ValueType::REAL ||
+        right_type != ValueAST::ValueType::REAL) {
+      error("type of left expression or right expression is not real!");
+    }
   }
 
   return op->wrap_with_type(left_type);

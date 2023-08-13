@@ -137,25 +137,11 @@ void SymbolTable::define(const std::string& name, double value) {
 }
 
 int SymbolTable::get_integer(const std::string& name) const {
-  const Scope* scope = current_scope_.get();
-  while (scope != nullptr) {
-    if (scope->integer_map_.find(name) != scope->integer_map_.end()) {
-      return scope->integer_map_.at(name);
-    }
-    scope = scope->enclosing_scope_.get();
-  }
-  return 0;
+  return current_scope_->get_integer(name);
 }
 
 double SymbolTable::get_real(const std::string& name) const {
-  const Scope* scope = current_scope_.get();
-  while (scope != nullptr) {
-    if (scope->real_map_.find(name) != scope->real_map_.end()) {
-      return scope->real_map_.at(name);
-    }
-    scope = scope->enclosing_scope_.get();
-  }
-  return 0.0;
+  return current_scope_->get_real(name);
 }
 
 }  // namespace V
