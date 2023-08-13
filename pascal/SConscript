@@ -1,11 +1,6 @@
 # use env from parent SConstruct
 Import('env')
 
-# logger
-# env.Object('logger.o', 'logger.cc')
-env.Object('log_test.o', 'log_test.cc')
-env.Program('log_test', ['log_test.o'])
-
 # lexer
 env.Object('lexer.o', 'lexer.cc')
 env.Object('lexer_test.o', 'lexer_test.cc')

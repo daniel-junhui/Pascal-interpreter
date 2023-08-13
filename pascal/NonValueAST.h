@@ -7,8 +7,8 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include "meta.h"
 #include "ValueAST.h"
+#include "meta.h"
 
 namespace Pascal {
 
@@ -64,7 +64,9 @@ class Block : public NonValueAST {
         procedures_declarations_(std::move(procedure_declarations)),
         compound_statement_(std::move(compound_statement)) {}
 
-  void accept(NonValueASTVisitor* visitor) const override { visitor->visit(this); }
+  void accept(NonValueASTVisitor* visitor) const override {
+    visitor->visit(this);
+  }
 
   void accept(NonValueASTChecker* checker) override { checker->check(this); }
 
@@ -90,7 +92,9 @@ class ProcedureDeclaration : public NonValueAST {
   explicit ProcedureDeclaration(std::string name, std::unique_ptr<Block> block)
       : name_(std::move(name)), block_(std::move(block)) {}
 
-  void accept(NonValueASTVisitor* visitor) const override { visitor->visit(this); }
+  void accept(NonValueASTVisitor* visitor) const override {
+    visitor->visit(this);
+  }
 
   void accept(NonValueASTChecker* checker) override { checker->check(this); }
 
@@ -109,7 +113,9 @@ class VariableDeclaration : public NonValueAST {
                                std::unique_ptr<Type> type)
       : variables_(std::move(variables)), type_(std::move(type)) {}
 
-  void accept(NonValueASTVisitor* visitor) const override { visitor->visit(this); }
+  void accept(NonValueASTVisitor* visitor) const override {
+    visitor->visit(this);
+  }
 
   void accept(NonValueASTChecker* checker) override { checker->check(this); }
 
@@ -129,7 +135,9 @@ class Program : public NonValueAST {
   explicit Program(std::string name, std::unique_ptr<Block> block)
       : name_(std::move(name)), block_(std::move(block)) {}
 
-  void accept(NonValueASTVisitor* visitor) const override { visitor->visit(this); }
+  void accept(NonValueASTVisitor* visitor) const override {
+    visitor->visit(this);
+  }
 
   void accept(NonValueASTChecker* checker) override { checker->check(this); }
 
@@ -151,9 +159,15 @@ class Assign : public NonValueAST {
 
   ValueAST* right() const { return right_.get(); }
 
-  void accept(NonValueASTVisitor* visitor) const override { visitor->visit(this); }
+  void accept(NonValueASTVisitor* visitor) const override {
+    visitor->visit(this);
+  }
 
   void accept(NonValueASTChecker* checker) override { checker->check(this); }
+
+  void set_left(Variable* left) { left_.reset(left); }
+
+  void set_right(ValueAST* right) { right_.reset(right); }
 };
 
 class Compound : public NonValueAST {
@@ -169,7 +183,9 @@ class Compound : public NonValueAST {
     return children_;
   }
 
-  void accept(NonValueASTVisitor* visitor) const override { visitor->visit(this); }
+  void accept(NonValueASTVisitor* visitor) const override {
+    visitor->visit(this);
+  }
 
   void accept(NonValueASTChecker* checker) override { checker->check(this); }
 };

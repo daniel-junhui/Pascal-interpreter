@@ -43,7 +43,7 @@ requires std::is_base_of_v<ValueAST, T> class TypeChecked : public T {
  public:
   // use T's constructor
   explicit TypeChecked(ValueAST::ValueType type, T* value)
-      : T(*value), type_(type) {}
+      : T(value), type_(type) {}
 
   ValueAST::ValueType type() const { return type_; }
 
@@ -140,6 +140,8 @@ class Variable : public ValueAST {
     assert(token.type() == Token::Type::ID);
   }
 
+  explicit Variable(Variable* variable) : value_(variable->value()) {}
+
   const std::string& value() const { return value_; }
 
   ValueAST::Value accept(ValueASTVisitor* visitor) const override {
@@ -228,6 +230,12 @@ class BinaryOperation : public ValueAST {
       default:
         throw std::runtime_error("Invalid operator");
     }
+  }
+
+  explicit BinaryOperation(BinaryOperation* binary_operation) {
+    left_.reset(binary_operation->left());
+    right_.reset(binary_operation->right());
+    op_ = binary_operation->op();
   }
 
   ValueAST* left() const { return left_.get(); }

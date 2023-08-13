@@ -55,8 +55,36 @@ void SemanticAnalyzer::check(Compound* compound) {
 }
 
 void SemanticAnalyzer::check(Assign* assign) {
-  assign->left()->accept(this);
-  assign->right()->accept(this);
+  ValueAST::ValueType left_type;
+  ValueAST::ValueType right_type;
+
+  // for left
+  if (const auto type_checked_left =
+          dynamic_cast<TypeChecked<Variable>*>(assign->left()->accept(this));
+      type_checked_left != nullptr) {
+    assert(type_checked_left->type_checked());
+    assign->set_left(type_checked_left);
+    left_type = type_checked_left->type();
+  } else {
+    error("type of left expression is not checked!");
+    return;
+  }
+
+  // for right
+  if (const auto type_checked_right =
+          dynamic_cast<TypeChecked<ValueAST>*>(assign->right()->accept(this));
+      type_checked_right != nullptr) {
+    assert(type_checked_right->type_checked());
+    assign->set_right(type_checked_right);
+    right_type = type_checked_right->type();
+  } else {
+    error("type of right expression is not checked!");
+    return;
+  }
+
+  if (left_type != right_type) {
+    error("type of left expression is not equal to type of right expression!");
+  }
 }
 
 ValueAST* SemanticAnalyzer::check(Variable* variable) {
@@ -64,8 +92,8 @@ ValueAST* SemanticAnalyzer::check(Variable* variable) {
   if (!symbol_table_.is_defined(var_name, true)) {
     error("variable " + var_name + " has not been declared!");
   }
-  return {};
-  // return new TypeChecked<Variable>(symbol_table_.get_type(var_name), variable);
+  return new TypeChecked<Variable>(symbol_table_.get_type(var_name).value(),
+                                   variable);
 }
 
 ValueAST* SemanticAnalyzer::check(BinaryOperation* op) {
@@ -80,6 +108,7 @@ ValueAST* SemanticAnalyzer::check(BinaryOperation* op) {
     left_type = type_checked_left->type();
   } else {
     error("type of left expression is not checked!");
+    return nullptr;
   }
 
   // for right
@@ -91,6 +120,7 @@ ValueAST* SemanticAnalyzer::check(BinaryOperation* op) {
     right_type = type_checked_right->type();
   } else {
     error("type of right expression is not checked!");
+    return nullptr;
   }
 
   if (left_type != right_type) {
@@ -108,6 +138,7 @@ ValueAST* SemanticAnalyzer::check(UnaryOperation* op) {
     return new TypeChecked<UnaryOperation>(type_checked_expr->type(), op);
   } else {
     error("type of expression is not checked!");
+    return nullptr;
   }
 }
 
