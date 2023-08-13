@@ -7,25 +7,25 @@
 
 namespace Pascal {
 
-class SemanticAnalyzer : public Visitor {
+class SemanticAnalyzer : public Checker {
  private:
   SymbolTable symbol_table_;
   void error(const std::string& msg);
 
  public:
-  void analyze(const Program*);
+  void analyze(Program*);
 
-  ValueAST::Value visit(const BinaryOperation*) override;
-  ValueAST::Value visit(const UnaryOperation*) override;
-  ValueAST::Value visit(const Number*) override;
-  ValueAST::Value visit(const Variable*) override;
-  void visit(const Compound*) override;
-  void visit(const Assign*) override;
-  void visit(const Program*) override;
-  void visit(const Block*) override;
-  void visit(const VariableDeclaration*) override;
-  ValueAST::ValueType visit(const Type*) override;
-  void visit(const ProcedureDeclaration*) override;
+  ValueAST* check(BinaryOperation*) override;
+  ValueAST* check(UnaryOperation*) override;
+  ValueAST* check(Number*) override;
+  ValueAST* check(Variable*) override;
+  void check(Compound*) override;
+  void check(Assign*) override;
+  void check(Program*) override;
+  void check(Block*) override;
+  void check(VariableDeclaration*) override;
+  ValueAST::ValueType check(Type*) override;
+  void check(ProcedureDeclaration*) override;
 };
 
 }  // namespace Pascal
