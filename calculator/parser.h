@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include "AST.h"
+#include "ast.h"
 #include "lexer.h"
 
 namespace Calculator {

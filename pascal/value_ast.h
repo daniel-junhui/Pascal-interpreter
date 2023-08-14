@@ -36,6 +36,10 @@ class ValueAST {
   virtual bool type_checked() const { return false; }
 
   virtual std::pair<ValueAST*, ValueType> wrap_with_type(ValueType) = 0;
+
+  virtual ValueType type() const {
+    throw std::runtime_error("Not a typed node");
+  }
 };
 
 template <class T>
@@ -48,7 +52,7 @@ requires std::is_base_of_v<ValueAST, T> class TypeChecked : public T {
   explicit TypeChecked(ValueAST::ValueType type, T&& other)
       : T(std::forward<T>(other)), type_(type) {}
 
-  ValueAST::ValueType type() const { return type_; }
+  ValueAST::ValueType type() const override { return type_; }
 
   bool type_checked() const override { return true; }
 

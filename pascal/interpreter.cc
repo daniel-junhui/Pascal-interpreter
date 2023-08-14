@@ -2,6 +2,7 @@
 
 #include "interpreter.h"
 #include <string>
+#include "value_ast.h"
 
 namespace Pascal {
 void Interpreter::error(const std::string& msg) {
@@ -9,13 +10,20 @@ void Interpreter::error(const std::string& msg) {
 }
 
 void Interpreter::visit(const Program* program) {
+  symbol_table_.enter_scope(program->name());
   program->block()->accept(this);
+  symbol_table_.exit_scope();
 }
 
 void Interpreter::visit(const Block* block) {
-  for (const auto& declaration : block->declarations()) {
+  for (const auto& declaration : block->var_declarations()) {
     declaration->accept(this);
   }
+
+  for (const auto& declaration : block->procedures_declarations()) {
+    declaration->accept(this);
+  }
+
   block->compound_statement()->accept(this);
 }
 
@@ -24,10 +32,23 @@ ValueAST::ValueType Interpreter::visit(const Type* type) {
 }
 
 void Interpreter::visit(const VariableDeclaration* var_decl) {
-  const auto type = var_decl->type()->accept(this);
-  const auto& vars = var_decl->variables();
+  const auto& variables = var_decl->variables();
+  for (const auto& variable : variables) {
+    const auto& var_ptr = variable.get();
+    assert(var_ptr->type_checked());
 
-  return;
+    if (const auto typed_ptr = dynamic_cast<TypeChecked<Variable>*>(var_ptr);
+        typed_ptr) {
+      const auto type = typed_ptr->type();
+      if (type == ValueAST::ValueType::INTEGER) {
+        symbol_table_.define(typed_ptr->value(), 0);
+      } else {
+        symbol_table_.define(typed_ptr->value(), 0.0);
+      }
+    } else {
+      assert(false);
+    }
+  }
 }
 
 ValueAST::Value Interpreter::visit(const Number* number) {

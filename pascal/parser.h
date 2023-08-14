@@ -7,7 +7,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "AST.h"
+#include "ast.h"
 #include "lexer.h"
 
 namespace Pascal {

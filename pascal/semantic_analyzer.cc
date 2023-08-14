@@ -114,8 +114,8 @@ void SemanticAnalyzer::check(Assign* assign) {
   depth_++;
 
   const auto left_var = assign->left();
-  const auto right_expr = assign->right_release();
 
+  const auto right_expr = assign->right_release();
   const auto [right_typed, right_type] = right_expr->accept(this);
 
   delete right_expr;

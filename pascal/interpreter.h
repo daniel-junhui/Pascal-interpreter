@@ -4,7 +4,7 @@
 
 #include <string>
 #include <unordered_map>
-#include "AST.h"
+#include "ast.h"
 #include "symbol_table.h"
 
 namespace Pascal {
@@ -41,6 +41,8 @@ class Interpreter : public Visitor {
   void visit(const Block* block) override;
 
   void visit(const VariableDeclaration* var_decl) override;
+
+  void visit(const ProcedureDeclaration*) override;
 
   ValueAST::ValueType visit(const Type* type) override;
 };

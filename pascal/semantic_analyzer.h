@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
-#include "AST.h"
+#include "ast.h"
 #include "symbol_table.h"
 
 namespace Pascal {

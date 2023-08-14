@@ -6,7 +6,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include "AST.h"
+#include "ast.h"
 
 namespace Pascal {
 
